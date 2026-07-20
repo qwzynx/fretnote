@@ -13,10 +13,10 @@ import {
   Eye,
 } from "lucide-react";
 
-import type { TabColumn } from "@/lib/types";
+import type { TabBlock, TabColumn } from "@/lib/types";
 import { getMockLyrics } from "@/lib/mock-data";
-import { extractChords } from "@/lib/music/parse";
-import { DEFAULT_TUNING, type Tuning } from "@/lib/music/tunings";
+import { extractChords, extractTabRefs } from "@/lib/music/parse";
+import { TUNINGS, DEFAULT_TUNING, type Tuning } from "@/lib/music/tunings";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,18 @@ import {
   type StrokeType,
 } from "./strumming-editor";
 
-const DEFAULT_TAB: TabColumn[] = Array.from({ length: 8 }, () => ["", "", "", "", "", ""] as TabColumn);
+const emptyTabColumns = (): TabColumn[] =>
+  Array.from({ length: 8 }, () => ["", "", "", "", "", ""] as TabColumn);
+
+let tabSeq = 0;
+function newTabBlock(label = ""): TabBlock {
+  tabSeq += 1;
+  return { id: `tab-${tabSeq}`, label, columns: emptyTabColumns() };
+}
+
+/** True once a block has at least one fret written in it. */
+const tabBlockFilled = (b: TabBlock) =>
+  b.columns.some((col) => col.some((v) => v !== ""));
 
 const KEYS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "Am", "Em", "Bm", "Dm", "F#m", "Cm"];
 const DIFFICULTIES = [
@@ -71,7 +82,7 @@ export function CreateNoteForm() {
   const [difficulty, setDifficulty] = useState<string>("beginner");
 
   const [chordSheet, setChordSheet] = useState("");
-  const [tabCols, setTabCols] = useState<TabColumn[]>(DEFAULT_TAB);
+  const [tabBlocks, setTabBlocks] = useState<TabBlock[]>(() => [newTabBlock("Intro")]);
   const [tuning, setTuning] = useState<Tuning>(DEFAULT_TUNING);
   const [manualChords, setManualChords] = useState<string[]>([]);
   const [pattern, setPattern] = useState<StrokeType[]>(emptyPattern());
@@ -94,23 +105,47 @@ export function CreateNoteForm() {
     if (!allChords.includes(name)) setManualChords((c) => dedupe([...c, name]));
   }
 
-  /** Insert [chord] into the chord sheet at the cursor (or the end). */
-  function insertChord(name: string) {
+  function updateTabBlock(next: TabBlock) {
+    setTabBlocks((bs) => bs.map((b) => (b.id === next.id ? next : b)));
+  }
+
+  function addTabBlock() {
+    setTabBlocks((bs) => [...bs, newTabBlock()]);
+  }
+
+  function removeTabBlock(id: string) {
+    setTabBlocks((bs) => bs.filter((b) => b.id !== id));
+  }
+
+  /** Insert text into the chord sheet at the cursor (or append at the end). */
+  function insertAtCursor(text: string) {
     const el = textareaRef.current;
-    const token = `[${name}]`;
     if (!el) {
-      setChordSheet((s) => s + token);
+      setChordSheet((s) => s + text);
       return;
     }
     const start = el.selectionStart ?? chordSheet.length;
     const end = el.selectionEnd ?? start;
-    const next = chordSheet.slice(0, start) + token + chordSheet.slice(end);
+    const next = chordSheet.slice(0, start) + text + chordSheet.slice(end);
     setChordSheet(next);
     requestAnimationFrame(() => {
       el.focus();
-      const pos = start + token.length;
+      const pos = start + text.length;
       el.setSelectionRange(pos, pos);
     });
+  }
+
+  /** Insert [chord] at the cursor. */
+  function insertChord(name: string) {
+    insertAtCursor(`[${name}]`);
+  }
+
+  /** Drop a [tab: Label] reference on its own line at the cursor. */
+  function insertTabRef(label: string) {
+    const start = textareaRef.current?.selectionStart ?? chordSheet.length;
+    const before = chordSheet.slice(0, start);
+    const lead = before.length > 0 && !before.endsWith("\n") ? "\n" : "";
+    insertAtCursor(`${lead}[tab: ${label}]\n`);
   }
 
   async function handleScrape() {
@@ -203,8 +238,8 @@ export function CreateNoteForm() {
         <section className="space-y-4">
           <SectionHeader
             icon={<Music4 className="size-4" />}
-            title="Chords & Lyrics"
-            hint="Write chords in brackets over your lyrics."
+            title="Song"
+            hint="Chords, lyrics and tabs in one place, in playing order."
           />
 
           <div className="space-y-3">
@@ -234,7 +269,10 @@ export function CreateNoteForm() {
             <p className="text-xs text-muted-foreground">
               Put chords in brackets right before the syllable, e.g.{" "}
               <code className="rounded bg-muted px-1 py-0.5">[Am]</code>. A line like{" "}
-              <code className="rounded bg-muted px-1 py-0.5">[Verse 1]</code> becomes a section header.
+              <code className="rounded bg-muted px-1 py-0.5">[Verse 1]</code> becomes a section header,
+              and a line like{" "}
+              <code className="rounded bg-muted px-1 py-0.5">[tab: Intro]</code> drops in the tab of
+              that name (define tabs below).
             </p>
 
             {finderOpen && (
@@ -245,18 +283,46 @@ export function CreateNoteForm() {
 
         <Separator />
 
-        {/* ── Tab ───────────────────────────────────────────────────── */}
+        {/* ── Tabs ──────────────────────────────────────────────────── */}
         <section className="space-y-4">
           <SectionHeader
             icon={<Guitar className="size-4" />}
-            title="Tab"
-            hint="Add fret-by-fret lines for riffs and intros."
+            title="Tabs"
+            hint="Define named tabs, then drop each into the song above with “Insert in song”."
           />
 
-          <div className="space-y-1.5">
-            <Label>Editor</Label>
-            <TabEditor columns={tabCols} onChange={setTabCols} tuning={tuning} onTuningChange={setTuning} />
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Tuning</span>
+            <Select
+              value={tuning.id}
+              onValueChange={(v) => setTuning(TUNINGS.find((t) => t.id === v) ?? DEFAULT_TUNING)}
+            >
+              <SelectTrigger size="sm" className="w-auto"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {TUNINGS.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
+          <div className="space-y-4">
+            {tabBlocks.map((block) => (
+              <TabEditor
+                key={block.id}
+                block={block}
+                tuning={tuning}
+                onChange={updateTabBlock}
+                onRemove={() => removeTabBlock(block.id)}
+                onInsert={() => insertTabRef(block.label.trim())}
+              />
+            ))}
+          </div>
+
+          <Button variant="outline" size="sm" onClick={addTabBlock}>
+            <Plus />
+            Add tab
+          </Button>
         </section>
 
         <Separator />
@@ -288,7 +354,7 @@ export function CreateNoteForm() {
         pattern={pattern}
         chords={allChords}
         sheet={chordSheet}
-        tabCols={tabCols}
+        tabBlocks={tabBlocks}
       />
     </div>
   );
@@ -345,7 +411,7 @@ function NotePreview({
   pattern,
   chords,
   sheet,
-  tabCols,
+  tabBlocks,
 }: {
   title: string;
   artist: string;
@@ -355,15 +421,23 @@ function NotePreview({
   pattern: StrokeType[];
   chords: string[];
   sheet: string;
-  tabCols: TabColumn[];
+  tabBlocks: TabBlock[];
 }) {
   const [fontSize, setFontSize] = useState(16);
   const clamp = (v: number) => setFontSize(Math.min(MAX_FONT, Math.max(MIN_FONT, v)));
 
   const hasPattern = pattern.some((s) => s !== "");
   const hasSheet = sheet.trim().length > 0;
-  const hasTab = tabCols.some((col) => col.some((v) => v !== ""));
+  const filledTabs = tabBlocks.filter(tabBlockFilled);
+  const hasTab = filledTabs.length > 0;
   const hasBody = hasPattern || chords.length > 0 || hasSheet || hasTab;
+
+  // Tabs referenced from the song render inline; any filled tab that hasn't
+  // been placed yet is shown afterwards so no work silently disappears.
+  const referenced = new Set(extractTabRefs(sheet).map((n) => n.toLowerCase()));
+  const unplacedTabs = filledTabs.filter(
+    (b) => !referenced.has(b.label.trim().toLowerCase())
+  );
 
   return (
     <div className="lg:sticky lg:top-20">
@@ -430,21 +504,32 @@ function NotePreview({
             </section>
           )}
 
-          {/* 5a. Chords over lyrics */}
+          {/* 5a. The song — chords, lyrics and inline tabs in playing order */}
           {hasSheet && (
             <section>
-              <PreviewLabel>Chords &amp; lyrics</PreviewLabel>
+              <PreviewLabel>Song</PreviewLabel>
               <div className="overflow-x-auto">
-                <ChordLyricsView sheet={sheet} fontSize={fontSize} />
+                <ChordLyricsView sheet={sheet} fontSize={fontSize} tabBlocks={tabBlocks} />
               </div>
             </section>
           )}
 
-          {/* 5b. Tab */}
-          {hasTab && (
+          {/* 5b. Tabs written but not yet placed in the song */}
+          {unplacedTabs.length > 0 && (
             <section>
-              <PreviewLabel>Tab</PreviewLabel>
-              <TabView tab={tabCols} fontSize={fontSize} />
+              <PreviewLabel>Tabs not placed yet</PreviewLabel>
+              <div className="space-y-4">
+                {unplacedTabs.map((block) => (
+                  <div key={block.id}>
+                    {block.label.trim() && (
+                      <p className="mb-1.5 text-sm font-medium text-foreground">
+                        {block.label}
+                      </p>
+                    )}
+                    <TabView tab={block.columns} fontSize={fontSize} />
+                  </div>
+                ))}
+              </div>
             </section>
           )}
 

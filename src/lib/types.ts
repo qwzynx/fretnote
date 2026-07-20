@@ -16,6 +16,18 @@ export interface Author {
  */
 export type TabColumn = [string, string, string, string, string, string];
 
+/**
+ * A labeled tab fragment. A song rarely tabs out end to end — instead it has
+ * pieces (an intro riff, a solo, a turnaround) that start and stop wherever
+ * they occur. A note can carry several of these; the label says where the
+ * fragment belongs, e.g. "Intro" or "Solo".
+ */
+export interface TabBlock {
+  id: string;
+  label: string;
+  columns: TabColumn[];
+}
+
 export interface Note {
   id: string;
   slug: string;

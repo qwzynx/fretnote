@@ -8,9 +8,12 @@ export interface ChordSegment {
 export type ParsedLine =
   | { kind: "lyric"; segments: ChordSegment[] }
   | { kind: "section"; label: string }
+  | { kind: "tabref"; name: string }
   | { kind: "blank" };
 
 const SECTION_RE = /^\s*\[([^\]]+)\]\s*$/;
+// A line that is only [tab: Name] pulls a named tab block into the flow.
+const TABREF_RE = /^\s*\[\s*tab:\s*([^\]]+?)\s*\]\s*$/i;
 const INLINE_CHORD_RE = /\[([^\]]+)\]/g;
 
 /**
@@ -21,6 +24,9 @@ const INLINE_CHORD_RE = /\[([^\]]+)\]/g;
  */
 export function parseChordLine(line: string): ParsedLine {
   if (line.trim() === "") return { kind: "blank" };
+
+  const tabref = line.match(TABREF_RE);
+  if (tabref) return { kind: "tabref", name: tabref[1].trim() };
 
   const section = line.match(SECTION_RE);
   // Treat as a section header only when the label isn't a plain chord-ish token.
@@ -70,12 +76,22 @@ export function extractChords(sheet: string): string[] {
   INLINE_CHORD_RE.lastIndex = 0;
   while ((match = INLINE_CHORD_RE.exec(sheet)) !== null) {
     const chord = match[1].trim();
-    // Skip section headers like "Verse 1".
-    if (/\s/.test(chord)) continue;
+    // Skip section headers like "Verse 1" and tab references like "tab: Intro".
+    if (/\s/.test(chord) || /^tab:/i.test(chord)) continue;
     if (!seen.has(chord)) {
       seen.add(chord);
       out.push(chord);
     }
+  }
+  return out;
+}
+
+/** Names referenced by `[tab: Name]` lines, in document order (may repeat). */
+export function extractTabRefs(sheet: string): string[] {
+  const out: string[] = [];
+  for (const line of sheet.replace(/\r\n/g, "\n").split("\n")) {
+    const m = line.match(TABREF_RE);
+    if (m) out.push(m[1].trim());
   }
   return out;
 }

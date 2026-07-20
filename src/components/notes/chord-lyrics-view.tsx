@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 
+import type { TabBlock } from "@/lib/types";
 import { parseChordSheet } from "@/lib/music/parse";
 import { transposeChordSheet } from "@/lib/music/transpose";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ChordDiagram } from "./chord-diagram";
+import { TabView } from "./tab-view";
 
 interface ChordLyricsViewProps {
   sheet: string;
@@ -18,6 +20,8 @@ interface ChordLyricsViewProps {
   transpose?: number;
   /** Base font size in px for the lyric text. */
   fontSize?: number;
+  /** Named tab blocks; a `[tab: Name]` line renders the matching one inline. */
+  tabBlocks?: TabBlock[];
   className?: string;
 }
 
@@ -25,6 +29,7 @@ export function ChordLyricsView({
   sheet,
   transpose = 0,
   fontSize = 16,
+  tabBlocks = [],
   className,
 }: ChordLyricsViewProps) {
   const lines = useMemo(
@@ -48,6 +53,28 @@ export function ChordLyricsView({
               className="mt-4 mb-1 text-xs font-semibold tracking-wide text-primary uppercase first:mt-0"
             >
               {line.label}
+            </div>
+          );
+        }
+        if (line.kind === "tabref") {
+          const block = tabBlocks.find(
+            (b) => b.label.trim().toLowerCase() === line.name.toLowerCase()
+          );
+          return (
+            <div key={i} className="my-3">
+              <div className="mb-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
+                {block?.label || line.name}
+              </div>
+              {block ? (
+                <TabView tab={block.columns} fontSize={fontSize} />
+              ) : (
+                <div
+                  className="rounded-lg border border-dashed border-border bg-card/40 px-3 py-2 text-sm text-muted-foreground"
+                  style={{ fontSize: fontSize * 0.85 }}
+                >
+                  No tab named &ldquo;{line.name}&rdquo; yet.
+                </div>
+              )}
             </div>
           );
         }
