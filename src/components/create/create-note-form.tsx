@@ -17,7 +17,6 @@ import type { TabColumn } from "@/lib/types";
 import { getMockLyrics } from "@/lib/mock-data";
 import { extractChords } from "@/lib/music/parse";
 import { DEFAULT_TUNING, type Tuning } from "@/lib/music/tunings";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,8 +57,6 @@ export function CreateNoteForm() {
   const [key, setKey] = useState("C");
   const [capo, setCapo] = useState(0);
   const [difficulty, setDifficulty] = useState<string>("beginner");
-
-  const [noteType, setNoteType] = useState<"chords" | "tab">("chords");
 
   const [chordSheet, setChordSheet] = useState("");
   const [tabCols, setTabCols] = useState<TabColumn[]>(DEFAULT_TAB);
@@ -111,7 +108,6 @@ export function CreateNoteForm() {
     setScraping(false);
     setScrapeOpen(false);
     setScrapeUrl("");
-    setNoteType("chords");
   }
 
   return (
@@ -189,94 +185,85 @@ export function CreateNoteForm() {
 
       <Separator />
 
-      {/* ── What are you writing? ─────────────────────────────────── */}
+      {/* ── Chords & Lyrics ───────────────────────────────────────── */}
       <section className="space-y-4">
-        <div className="space-y-2">
-          <h2 className="font-heading text-base font-semibold">Content</h2>
-          <div className="grid grid-cols-2 gap-3 sm:max-w-md">
-            <TypeCard
-              active={noteType === "chords"}
-              onClick={() => setNoteType("chords")}
-              icon={<Music4 className="size-4" />}
-              title="Chords & Lyrics"
-              hint="Chords over words"
+        <SectionHeader
+          icon={<Music4 className="size-4" />}
+          title="Chords & Lyrics"
+          hint="Write chords in brackets over your lyrics."
+        />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Editable source + chord finder */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="chordsheet">Editor</Label>
+              <Button
+                variant={finderOpen ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setFinderOpen((o) => !o)}
+                aria-expanded={finderOpen}
+              >
+                <Wand2 />
+                Chord finder
+              </Button>
+            </div>
+
+            <textarea
+              id="chordsheet"
+              ref={textareaRef}
+              value={chordSheet}
+              onChange={(e) => setChordSheet(e.target.value)}
+              rows={16}
+              spellCheck={false}
+              placeholder={"[Verse]\n[G]Here is a [D]line with [Em]chords\n[C]Another line below"}
+              className="w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 font-mono text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 dark:bg-input/30"
             />
-            <TypeCard
-              active={noteType === "tab"}
-              onClick={() => setNoteType("tab")}
-              icon={<Guitar className="size-4" />}
-              title="Tab"
-              hint="Fret-by-fret"
-            />
+            <p className="text-xs text-muted-foreground">
+              Put chords in brackets right before the syllable, e.g.{" "}
+              <code className="rounded bg-muted px-1 py-0.5">[Am]</code>. A line like{" "}
+              <code className="rounded bg-muted px-1 py-0.5">[Verse 1]</code> becomes a section header.
+            </p>
+
+            {finderOpen && (
+              <ChordPanel chords={allChords} onAddChord={addChord} onInsert={insertChord} />
+            )}
+          </div>
+
+          {/* Live preview */}
+          <ChordPreview sheet={chordSheet} chords={allChords} />
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* ── Tab ───────────────────────────────────────────────────── */}
+      <section className="space-y-4">
+        <SectionHeader
+          icon={<Guitar className="size-4" />}
+          title="Tab"
+          hint="Add fret-by-fret lines for riffs and intros."
+        />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Editor</Label>
+            <TabEditor columns={tabCols} onChange={setTabCols} tuning={tuning} onTuningChange={setTuning} />
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+              <Eye className="size-3.5" />
+              Preview
+            </div>
+            {tabCols.some((col) => col.some((v) => v !== "")) ? (
+              <TabView tab={tabCols} />
+            ) : (
+              <div className="flex min-h-[12rem] items-center justify-center rounded-lg border border-dashed border-border bg-card/40 p-4 text-center text-sm text-muted-foreground">
+                Type fret numbers on the left to see your tab rendered here.
+              </div>
+            )}
           </div>
         </div>
-
-        {/* ── Chords & Lyrics ─────────────────────────────────────── */}
-        {noteType === "chords" ? (
-          <div className="space-y-4">
-            <div className="grid gap-4 lg:grid-cols-2">
-              {/* Editable source + chord finder */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="chordsheet">Editor</Label>
-                  <Button
-                    variant={finderOpen ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={() => setFinderOpen((o) => !o)}
-                    aria-expanded={finderOpen}
-                  >
-                    <Wand2 />
-                    Chord finder
-                  </Button>
-                </div>
-
-                <textarea
-                  id="chordsheet"
-                  ref={textareaRef}
-                  value={chordSheet}
-                  onChange={(e) => setChordSheet(e.target.value)}
-                  rows={16}
-                  spellCheck={false}
-                  placeholder={"[Verse]\n[G]Here is a [D]line with [Em]chords\n[C]Another line below"}
-                  className="w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 font-mono text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 dark:bg-input/30"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Put chords in brackets right before the syllable, e.g.{" "}
-                  <code className="rounded bg-muted px-1 py-0.5">[Am]</code>. A line like{" "}
-                  <code className="rounded bg-muted px-1 py-0.5">[Verse 1]</code> becomes a section header.
-                </p>
-
-                {finderOpen && (
-                  <ChordPanel chords={allChords} onAddChord={addChord} onInsert={insertChord} />
-                )}
-              </div>
-
-              {/* Live preview */}
-              <ChordPreview sheet={chordSheet} chords={allChords} />
-            </div>
-          </div>
-        ) : (
-          /* ── Tab ───────────────────────────────────────────────── */
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Editor</Label>
-              <TabEditor columns={tabCols} onChange={setTabCols} tuning={tuning} onTuningChange={setTuning} />
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-                <Eye className="size-3.5" />
-                Preview
-              </div>
-              {tabCols.some((col) => col.some((v) => v !== "")) ? (
-                <TabView tab={tabCols} />
-              ) : (
-                <div className="flex min-h-[12rem] items-center justify-center rounded-lg border border-dashed border-border bg-card/40 p-4 text-center text-sm text-muted-foreground">
-                  Type fret numbers on the left to see your tab rendered here.
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </section>
 
       <Separator />
@@ -300,45 +287,26 @@ export function CreateNoteForm() {
   );
 }
 
-/** Segmented card used to pick the note's content type. */
-function TypeCard({
-  active,
-  onClick,
+/** Heading row shown above each content section. */
+function SectionHeader({
   icon,
   title,
   hint,
 }: {
-  active: boolean;
-  onClick: () => void;
   icon: React.ReactNode;
   title: string;
   hint: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors",
-        active
-          ? "border-primary/50 bg-primary/5 ring-1 ring-primary/25"
-          : "border-border bg-card/40 hover:border-primary/30 hover:bg-muted/40"
-      )}
-    >
-      <span
-        className={cn(
-          "flex size-8 shrink-0 items-center justify-center rounded-lg",
-          active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-        )}
-      >
+    <div className="flex items-center gap-2.5">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
         {icon}
       </span>
-      <span className="min-w-0">
-        <span className="block text-sm font-medium">{title}</span>
-        <span className="block truncate text-xs text-muted-foreground">{hint}</span>
-      </span>
-    </button>
+      <div>
+        <h2 className="font-heading text-base font-semibold leading-tight">{title}</h2>
+        <p className="text-xs text-muted-foreground">{hint}</p>
+      </div>
+    </div>
   );
 }
 
