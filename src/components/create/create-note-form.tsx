@@ -1,17 +1,27 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Link2, Loader2, Music4, Guitar } from "lucide-react";
+import {
+  Link2,
+  Loader2,
+  Music4,
+  Guitar,
+  Wand2,
+  Type,
+  Minus,
+  Plus,
+  Eye,
+} from "lucide-react";
 
 import type { TabColumn } from "@/lib/types";
 import { getMockLyrics } from "@/lib/mock-data";
 import { extractChords } from "@/lib/music/parse";
 import { DEFAULT_TUNING, type Tuning } from "@/lib/music/tunings";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -20,7 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChordLyricsView } from "@/components/notes/chord-lyrics-view";
-import { NoteSummary } from "./note-summary";
+import { ChordDiagram } from "@/components/notes/chord-diagram";
+import { TabView } from "@/components/notes/tab-view";
 import { TabEditor } from "./tab-editor";
 import { ChordPanel } from "./chord-panel";
 import { StrummingEditor, emptyPattern, type StrokeType } from "./strumming-editor";
@@ -34,6 +45,9 @@ const DIFFICULTIES = [
   { value: "advanced", label: "Advanced" },
 ] as const;
 
+const MIN_FONT = 13;
+const MAX_FONT = 22;
+
 function dedupe(list: string[]): string[] {
   return [...new Set(list)];
 }
@@ -45,13 +59,15 @@ export function CreateNoteForm() {
   const [capo, setCapo] = useState(0);
   const [difficulty, setDifficulty] = useState<string>("beginner");
 
+  const [noteType, setNoteType] = useState<"chords" | "tab">("chords");
+
   const [chordSheet, setChordSheet] = useState("");
   const [tabCols, setTabCols] = useState<TabColumn[]>(DEFAULT_TAB);
   const [tuning, setTuning] = useState<Tuning>(DEFAULT_TUNING);
   const [manualChords, setManualChords] = useState<string[]>([]);
   const [pattern, setPattern] = useState<StrokeType[]>(emptyPattern());
 
-  const [editorTab, setEditorTab] = useState("lyrics");
+  const [finderOpen, setFinderOpen] = useState(false);
 
   const [scrapeUrl, setScrapeUrl] = useState("");
   const [scrapeOpen, setScrapeOpen] = useState(false);
@@ -59,13 +75,11 @@ export function CreateNoteForm() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Chords for the summary = those written in the sheet plus any added by hand.
+  // Chords on the note = those written in the sheet plus any added by hand.
   const allChords = useMemo(
     () => dedupe([...extractChords(chordSheet), ...manualChords]),
     [chordSheet, manualChords]
   );
-
-  const hasTabContent = tabCols.some((col) => col.some((v) => v !== ""));
 
   function addChord(name: string) {
     if (!allChords.includes(name)) setManualChords((c) => dedupe([...c, name]));
@@ -97,7 +111,7 @@ export function CreateNoteForm() {
     setScraping(false);
     setScrapeOpen(false);
     setScrapeUrl("");
-    setEditorTab("lyrics");
+    setNoteType("chords");
   }
 
   return (
@@ -173,30 +187,49 @@ export function CreateNoteForm() {
         )}
       </section>
 
-      {/* ── Summary (chords + tab + strumming at a glance) ─────────── */}
-      <NoteSummary chords={allChords} tab={hasTabContent ? tabCols : null} pattern={pattern} />
-
       <Separator />
 
-      {/* ── Editor: Lyrics & Chords / Tab ─────────────────────────── */}
+      {/* ── What are you writing? ─────────────────────────────────── */}
       <section className="space-y-4">
-        <Tabs value={editorTab} onValueChange={(v) => setEditorTab(v as string)}>
-          <TabsList>
-            <TabsTrigger value="lyrics">
-              <Music4 />
-              Lyrics &amp; Chords
-            </TabsTrigger>
-            <TabsTrigger value="tab">
-              <Guitar />
-              Tab
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-2">
+          <h2 className="font-heading text-base font-semibold">Content</h2>
+          <div className="grid grid-cols-2 gap-3 sm:max-w-md">
+            <TypeCard
+              active={noteType === "chords"}
+              onClick={() => setNoteType("chords")}
+              icon={<Music4 className="size-4" />}
+              title="Chords & Lyrics"
+              hint="Chords over words"
+            />
+            <TypeCard
+              active={noteType === "tab"}
+              onClick={() => setNoteType("tab")}
+              icon={<Guitar className="size-4" />}
+              title="Tab"
+              hint="Fret-by-fret"
+            />
+          </div>
+        </div>
 
-          <TabsContent value="lyrics" className="pt-4">
+        {/* ── Chords & Lyrics ─────────────────────────────────────── */}
+        {noteType === "chords" ? (
+          <div className="space-y-4">
             <div className="grid gap-4 lg:grid-cols-2">
-              {/* Editable source */}
-              <div className="space-y-1.5">
-                <Label htmlFor="chordsheet">Editor</Label>
+              {/* Editable source + chord finder */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="chordsheet">Editor</Label>
+                  <Button
+                    variant={finderOpen ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => setFinderOpen((o) => !o)}
+                    aria-expanded={finderOpen}
+                  >
+                    <Wand2 />
+                    Chord finder
+                  </Button>
+                </div>
+
                 <textarea
                   id="chordsheet"
                   ref={textareaRef}
@@ -212,39 +245,38 @@ export function CreateNoteForm() {
                   <code className="rounded bg-muted px-1 py-0.5">[Am]</code>. A line like{" "}
                   <code className="rounded bg-muted px-1 py-0.5">[Verse 1]</code> becomes a section header.
                 </p>
+
+                {finderOpen && (
+                  <ChordPanel chords={allChords} onAddChord={addChord} onInsert={insertChord} />
+                )}
               </div>
 
-              {/* Live preview: chords sitting above each lyric line */}
-              <div className="space-y-1.5">
-                <Label>Preview</Label>
-                <div className="min-h-[16rem] rounded-lg border border-border bg-card/60 p-4">
-                  {chordSheet.trim() ? (
-                    <ChordLyricsView sheet={chordSheet} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Your chords will appear above the lyrics here as you type.
-                    </p>
-                  )}
-                </div>
-              </div>
+              {/* Live preview */}
+              <ChordPreview sheet={chordSheet} chords={allChords} />
             </div>
-          </TabsContent>
-
-          <TabsContent value="tab" className="pt-4">
-            <TabEditor columns={tabCols} onChange={setTabCols} tuning={tuning} onTuningChange={setTuning} />
-          </TabsContent>
-        </Tabs>
-
-        {/* Combined chord tools — search a chord or detect it from frets, then
-            add it to the note or drop it straight into the lyrics. */}
-        <div className="space-y-2">
-          <Label>Chord finder</Label>
-          <ChordPanel
-            chords={allChords}
-            onAddChord={addChord}
-            onInsert={editorTab === "lyrics" ? insertChord : undefined}
-          />
-        </div>
+          </div>
+        ) : (
+          /* ── Tab ───────────────────────────────────────────────── */
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>Editor</Label>
+              <TabEditor columns={tabCols} onChange={setTabCols} tuning={tuning} onTuningChange={setTuning} />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                <Eye className="size-3.5" />
+                Preview
+              </div>
+              {tabCols.some((col) => col.some((v) => v !== "")) ? (
+                <TabView tab={tabCols} />
+              ) : (
+                <div className="flex min-h-[12rem] items-center justify-center rounded-lg border border-dashed border-border bg-card/40 p-4 text-center text-sm text-muted-foreground">
+                  Type fret numbers on the left to see your tab rendered here.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       <Separator />
@@ -263,6 +295,123 @@ export function CreateNoteForm() {
       <div className="flex justify-end gap-3">
         <Button variant="outline">Save draft</Button>
         <Button>Publish note</Button>
+      </div>
+    </div>
+  );
+}
+
+/** Segmented card used to pick the note's content type. */
+function TypeCard({
+  active,
+  onClick,
+  icon,
+  title,
+  hint,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors",
+        active
+          ? "border-primary/50 bg-primary/5 ring-1 ring-primary/25"
+          : "border-border bg-card/40 hover:border-primary/30 hover:bg-muted/40"
+      )}
+    >
+      <span
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-lg",
+          active ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
+        )}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-medium">{title}</span>
+        <span className="block truncate text-xs text-muted-foreground">{hint}</span>
+      </span>
+    </button>
+  );
+}
+
+/**
+ * A "sheet of paper" live preview that mirrors how the note reads once
+ * published: chords sitting above the lyrics, with the chord shapes used
+ * gathered below. Font size is adjustable so long lines can be checked.
+ */
+function ChordPreview({ sheet, chords }: { sheet: string; chords: string[] }) {
+  const [fontSize, setFontSize] = useState(16);
+  const [showDiagrams, setShowDiagrams] = useState(true);
+
+  const clamp = (v: number) => setFontSize(Math.min(MAX_FONT, Math.max(MIN_FONT, v)));
+  const hasContent = sheet.trim().length > 0;
+
+  return (
+    <div className="lg:sticky lg:top-20">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card/60 shadow-sm">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/30 px-3 py-2">
+          <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+            <Eye className="size-3.5" />
+            Preview
+            {chords.length > 0 && (
+              <span className="ml-1 rounded-full bg-primary/10 px-1.5 text-xs font-medium text-primary">
+                {chords.length} chord{chords.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <Type className="size-3.5 text-muted-foreground" />
+            <Button variant="ghost" size="icon-xs" onClick={() => clamp(fontSize - 1)} aria-label="Smaller text">
+              <Minus />
+            </Button>
+            <Button variant="ghost" size="icon-xs" onClick={() => clamp(fontSize + 1)} aria-label="Larger text">
+              <Plus />
+            </Button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="min-h-[16rem] overflow-x-auto p-4">
+          {hasContent ? (
+            <ChordLyricsView sheet={sheet} fontSize={fontSize} />
+          ) : (
+            <div className="flex h-full min-h-[14rem] flex-col items-center justify-center gap-2 text-center">
+              <Music4 className="size-6 text-muted-foreground/40" />
+              <p className="max-w-[16rem] text-sm text-muted-foreground">
+                Your chords will appear above the lyrics here as you type.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Chords used */}
+        {chords.length > 0 && (
+          <div className="border-t border-border/60 bg-muted/20 px-4 py-3">
+            <button
+              type="button"
+              onClick={() => setShowDiagrams((s) => !s)}
+              className="mb-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              {showDiagrams ? "Hide" : "Show"} chord shapes
+            </button>
+            {showDiagrams && (
+              <div className="flex flex-wrap gap-3">
+                {chords.map((c) => (
+                  <ChordDiagram key={c} name={c} className="w-16" />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
