@@ -1,4 +1,3 @@
-"use client";
 
 import { useRef } from "react";
 import { Plus, Trash2, Eraser, X, CornerDownLeft } from "lucide-react";

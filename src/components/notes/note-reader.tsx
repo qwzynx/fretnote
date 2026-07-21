@@ -1,4 +1,3 @@
-"use client";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -128,9 +127,21 @@ export function NoteReader({ note }: { note: Note }) {
           sheet={note.chordSheet}
           transpose={transpose}
           fontSize={fontSize}
+          tabBlocks={note.tabBlocks}
         />
-      ) : note.tab ? (
-        <TabView tab={note.tab} fontSize={fontSize} />
+      ) : note.tabBlocks?.length ? (
+        <div className="space-y-6">
+          {note.tabBlocks.map((block) => (
+            <div key={block.id}>
+              {block.label && (
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary">
+                  {block.label}
+                </p>
+              )}
+              <TabView tab={block.columns} fontSize={fontSize} />
+            </div>
+          ))}
+        </div>
       ) : null}
 
       {/* Chords used */}

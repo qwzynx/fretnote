@@ -1,4 +1,3 @@
-"use client";
 
 import { useState } from "react";
 import { Plus, Search, Guitar, CornerDownLeft, RotateCcw, Check } from "lucide-react";

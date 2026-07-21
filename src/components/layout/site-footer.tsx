@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Guitar } from "lucide-react";
 
 export function SiteFooter() {
@@ -13,14 +13,12 @@ export function SiteFooter() {
           </span>
         </div>
         <nav className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-foreground">
-            Feed
+          <Link to="/" className="hover:text-foreground">
+            Notes
           </Link>
-          <Link href="/create" className="hover:text-foreground">
+          <Link to="/create" className="hover:text-foreground">
             Create
           </Link>
-          <span className="opacity-60">About</span>
-          <span className="opacity-60">Sign in</span>
         </nav>
       </div>
     </footer>

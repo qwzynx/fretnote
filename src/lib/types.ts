@@ -2,13 +2,6 @@ export type NoteType = "chords" | "tab";
 
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
-export interface Author {
-  id: string;
-  name: string;
-  handle: string;
-  avatarColor: string;
-}
-
 /**
  * A single column of a 6-string tab. Strings are ordered high-e -> low-E
  * to match how tabs are conventionally written (top line = high e).
@@ -34,13 +27,10 @@ export interface Note {
   type: NoteType;
   title: string;
   artist: string;
-  author: Author;
   key: string;
   capo: number;
   difficulty: Difficulty;
   tags: string[];
-  likes: number;
-  saves: number;
   createdAt: string; // ISO date
   /**
    * Chord-over-lyrics body using inline bracket notation, e.g.
@@ -48,9 +38,10 @@ export interface Note {
    */
   chordSheet?: string;
   /**
-   * Tab body as columns of 6 strings. Present for type === "tab".
+   * Named tab fragments. For type === "tab", the first block is the main tab.
+   * For type === "chords", these are referenced inline via [tab: Label].
    */
-  tab?: TabColumn[];
+  tabBlocks?: TabBlock[];
   /** Chord names referenced by the note, used to render diagrams. */
   chords: string[];
 }

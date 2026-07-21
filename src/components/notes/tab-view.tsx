@@ -1,4 +1,3 @@
-"use client";
 
 import type { TabColumn } from "@/lib/types";
 import { TAB_STRING_LABELS } from "@/lib/types";

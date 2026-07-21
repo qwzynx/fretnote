@@ -1,9 +1,8 @@
-"use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
-  Link2,
-  Loader2,
   Music4,
   Guitar,
   Wand2,
@@ -14,7 +13,7 @@ import {
 } from "lucide-react";
 
 import type { TabBlock, TabColumn } from "@/lib/types";
-import { getMockLyrics } from "@/lib/mock-data";
+import { createNote, updateNote, getNote } from "@/lib/db";
 import { extractChords, extractTabRefs } from "@/lib/music/parse";
 import { TUNINGS, DEFAULT_TUNING, type Tuning } from "@/lib/music/tunings";
 import { Button } from "@/components/ui/button";
@@ -74,7 +73,10 @@ function dedupe(list: string[]): string[] {
   return [...new Set(list)];
 }
 
-export function CreateNoteForm() {
+export function CreateNoteForm({ editId }: { editId?: string }) {
+  const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+
   const [title, setTitle] = useState("");
   const [artist, setArtist] = useState("");
   const [key, setKey] = useState("C");
@@ -89,11 +91,23 @@ export function CreateNoteForm() {
 
   const [finderOpen, setFinderOpen] = useState(false);
 
-  const [scrapeUrl, setScrapeUrl] = useState("");
-  const [scrapeOpen, setScrapeOpen] = useState(false);
-  const [scraping, setScraping] = useState(false);
-
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load existing note when editing
+  useEffect(() => {
+    if (!editId) return;
+    getNote(editId).then((note) => {
+      if (!note) return;
+      setTitle(note.title);
+      setArtist(note.artist);
+      setKey(note.key);
+      setCapo(note.capo);
+      setDifficulty(note.difficulty);
+      setChordSheet(note.chordSheet ?? "");
+      if (note.tabBlocks?.length) setTabBlocks(note.tabBlocks);
+      setManualChords(note.chords);
+    });
+  }, [editId]);
 
   // Chords on the note = those written in the sheet plus any added by hand.
   const allChords = useMemo(
@@ -148,15 +162,6 @@ export function CreateNoteForm() {
     insertAtCursor(`${lead}[tab: ${label}]\n`);
   }
 
-  async function handleScrape() {
-    setScraping(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setChordSheet(getMockLyrics(artist, title));
-    setScraping(false);
-    setScrapeOpen(false);
-    setScrapeUrl("");
-  }
-
   return (
     <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
       {/* ══ Editors (left) ══════════════════════════════════════════ */}
@@ -208,28 +213,7 @@ export function CreateNoteForm() {
               </Select>
             </div>
 
-            <div className="ml-auto">
-              <Button variant="outline" onClick={() => setScrapeOpen((o) => !o)}>
-                <Link2 />
-                Scrape song
-              </Button>
-            </div>
           </div>
-
-          {scrapeOpen && (
-            <div className="rounded-xl border border-border bg-card/60 p-4 space-y-3">
-              <p className="text-sm font-medium">Fetch lyrics &amp; chords from a URL</p>
-              <div className="flex gap-2">
-                <Input placeholder="https://…" value={scrapeUrl} onChange={(e) => setScrapeUrl(e.target.value)} className="flex-1" />
-                <Button onClick={handleScrape} disabled={scraping}>
-                  {scraping ? <Loader2 className="animate-spin" /> : "Fetch"}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Demo: fills in mock lyrics for &ldquo;{title || "your song"}&rdquo;.
-              </p>
-            </div>
-          )}
         </section>
 
         <Separator />
@@ -339,8 +323,45 @@ export function CreateNoteForm() {
         <Separator />
 
         <div className="flex justify-end gap-3">
-          <Button variant="outline">Save draft</Button>
-          <Button>Publish note</Button>
+          <Button variant="outline" onClick={() => navigate(-1)}>Cancel</Button>
+          <Button
+            disabled={saving || !title.trim() || !artist.trim()}
+            onClick={async () => {
+              setSaving(true);
+              try {
+                const filledTabs = tabBlocks.filter(tabBlockFilled);
+                const hasSheet = chordSheet.trim().length > 0;
+                const input = {
+                  type: (hasSheet ? "chords" : "tab") as "chords" | "tab",
+                  title: title.trim(),
+                  artist: artist.trim(),
+                  key,
+                  capo,
+                  difficulty: difficulty as "beginner" | "intermediate" | "advanced",
+                  tags: [],
+                  chordSheet: hasSheet ? chordSheet : undefined,
+                  tabBlocks: filledTabs.length ? filledTabs : undefined,
+                  chords: allChords,
+                };
+                if (editId) {
+                  await updateNote(editId, input);
+                  toast.success("Note updated");
+                  navigate(`/notes/${editId}`);
+                } else {
+                  const note = await createNote(input);
+                  toast.success("Note saved");
+                  navigate(`/notes/${note.id}`);
+                }
+              } catch (err) {
+                toast.error("Failed to save note");
+                console.error(err);
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            {saving ? "Saving…" : editId ? "Update note" : "Save note"}
+          </Button>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
-"use client";
 
 import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
+import { PlusCircle, Search } from "lucide-react";
 
 import type { Note, NoteType } from "@/lib/types";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
 import { NoteCard } from "@/components/notes/note-card";
 
 type Filter = "all" | NoteType;
-type Sort = "trending" | "newest" | "likes";
+type Sort = "newest" | "oldest" | "title";
 
 const FILTERS: { value: Filter; label: string }[] = [
   { value: "all", label: "All" },
@@ -24,10 +24,15 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: "tab", label: "Tabs" },
 ];
 
-export function FeedClient({ notes }: { notes: Note[] }) {
+interface FeedClientProps {
+  notes: Note[];
+  onDelete?: (id: string) => void;
+}
+
+export function FeedClient({ notes, onDelete: _onDelete }: FeedClientProps) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [sort, setSort] = useState<Sort>("trending");
+  const [sort, setSort] = useState<Sort>("newest");
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -37,21 +42,32 @@ export function FeedClient({ notes }: { notes: Note[] }) {
       return (
         n.title.toLowerCase().includes(q) ||
         n.artist.toLowerCase().includes(q) ||
-        n.author.name.toLowerCase().includes(q) ||
         n.tags.some((t) => t.toLowerCase().includes(q)) ||
         n.chords.some((c) => c.toLowerCase() === q)
       );
     });
 
     list = [...list].sort((a, b) => {
-      if (sort === "newest")
-        return b.createdAt.localeCompare(a.createdAt);
-      if (sort === "likes") return b.likes - a.likes;
-      // trending: blend of likes + saves
-      return b.likes + b.saves * 2 - (a.likes + a.saves * 2);
+      if (sort === "oldest") return a.createdAt.localeCompare(b.createdAt);
+      if (sort === "title") return a.title.localeCompare(b.title);
+      return b.createdAt.localeCompare(a.createdAt);
     });
     return list;
   }, [notes, query, filter, sort]);
+
+  if (notes.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border py-20 text-center">
+        <p className="text-sm text-muted-foreground">
+          No notes yet. Create your first one!
+        </p>
+        <Button size="sm" className="mt-4" render={<Link to="/create" />}>
+          <PlusCircle />
+          Create a note
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -86,13 +102,12 @@ export function FeedClient({ notes }: { notes: Note[] }) {
 
           <Select value={sort} onValueChange={(v) => setSort(v as Sort)}>
             <SelectTrigger className="h-10">
-              <SlidersHorizontal className="size-3.5" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="trending">Trending</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="likes">Most liked</SelectItem>
+              <SelectItem value="newest">Newest first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+              <SelectItem value="title">A → Z</SelectItem>
             </SelectContent>
           </Select>
         </div>

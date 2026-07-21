@@ -1,24 +1,21 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import { Guitar, Home, PlusCircle, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const NAV = [
-  { href: "/", label: "Feed", icon: Home },
+  { href: "/", label: "Notes", icon: Home },
   { href: "/create", label: "Create", icon: PlusCircle },
 ];
 
 export function SiteHeader() {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
-        <Link href="/" className="flex items-center gap-2 font-heading">
+        <Link to="/" className="flex items-center gap-2 font-heading">
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25">
             <Guitar className="size-4.5" />
           </span>
@@ -38,7 +35,8 @@ export function SiteHeader() {
                 key={item.href}
                 variant="ghost"
                 size="sm"
-                render={<Link href={item.href} />}
+                nativeButton={false}
+                render={<Link to={item.href} />}
                 className={cn(
                   "text-muted-foreground",
                   active && "bg-muted text-foreground"
@@ -55,13 +53,14 @@ export function SiteHeader() {
           <Button
             variant="outline"
             size="sm"
-            render={<Link href="/?focus=search" />}
+            nativeButton={false}
+            render={<Link to="/?focus=search" />}
             className="hidden text-muted-foreground md:inline-flex"
           >
             <Search />
             Search notes
           </Button>
-          <Button size="sm" render={<Link href="/create" />}>
+          <Button size="sm" nativeButton={false} render={<Link to="/create" />}>
             <PlusCircle />
             New note
           </Button>
