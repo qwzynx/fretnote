@@ -1,0 +1,117 @@
+import { Theme } from "theme.slint";
+import { ChordDiagramData, DiagramDot } from "structs.slint";
+
+// A guitar chord diagram drawn with rectangles/text (ported from the old SVG
+// component). Strings run low-E (left) to high-e (right). Geometry mirrors the
+// original 100x132 viewBox, used here as raw pixels.
+export component ChordDiagram inherits Rectangle {
+    in property <ChordDiagramData> data;
+
+    // Layout constants (match chord-diagram.tsx).
+    property <length> pad-x: 12px;
+    property <length> pad-top: 26px;
+    property <length> string-gap: 15.2px;   // gridW(76) / 5
+    property <length> fret-gap: 15.6px;      // gridH(78) / 5
+    property <int> frets: 5;
+
+    function sx(s: int) -> length {
+        pad-x + s * string-gap;
+    }
+    function fy(f: int) -> length {
+        pad-top + f * fret-gap;
+    }
+
+    width: 104px;
+    height: 132px;
+
+    // Chord name.
+    Text {
+        x: 0; y: 2px;
+        width: 100px;
+        horizontal-alignment: center;
+        text: data.name;
+        color: Theme.foreground;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    // Nut (thick) when starting at fret 1, else a "Nfr" label.
+    if data.show-nut: Rectangle {
+        x: pad-x; y: pad-top - 2px;
+        width: 76px; height: 3px;
+        background: Theme.foreground.with-alpha(0.7);
+    }
+    if !data.show-nut: Text {
+        x: 0; y: pad-top + fret-gap / 2 - 5px;
+        width: pad-x - 5px;
+        horizontal-alignment: right;
+        text: data.base-fret + "fr";
+        color: Theme.muted;
+        font-size: 9px;
+    }
+
+    // Fret lines (frets + 1).
+    for f in 6: Rectangle {
+        x: pad-x; y: fy(f);
+        width: 76px; height: 1px;
+        background: Theme.border;
+    }
+
+    // Strings.
+    for s in 6: Rectangle {
+        x: sx(s); y: pad-top;
+        width: 1px; height: 78px;
+        background: Theme.border;
+    }
+
+    // Barre.
+    if data.has-barre: Rectangle {
+        x: sx(data.barre-from) - 4px;
+        y: fy(data.barre-offset) + fret-gap / 2 - 4px;
+        width: (data.barre-to - data.barre-from) * string-gap + 8px;
+        height: 8px;
+        border-radius: 4px;
+        background: Theme.primary;
+    }
+
+    // Markers: fretted dots, open circles, muted crosses.
+    for m in data.markers: Rectangle {
+        // Fretted dot.
+        if m.kind == "dot": Rectangle {
+            x: sx(m.string-idx) - 5px;
+            y: fy(m.fret-offset) + fret-gap / 2 - 5px;
+            width: 10px; height: 10px;
+            border-radius: 5px;
+            background: Theme.primary;
+        }
+        // Open string.
+        if m.kind == "open": Rectangle {
+            x: sx(m.string-idx) - 3px;
+            y: pad-top - 11px;
+            width: 6px; height: 6px;
+            border-radius: 3px;
+            border-width: 1px;
+            border-color: Theme.muted;
+        }
+        // Muted string.
+        if m.kind == "muted": Text {
+            x: sx(m.string-idx) - 6px;
+            y: pad-top - 15px;
+            width: 12px;
+            horizontal-alignment: center;
+            text: "×";
+            color: Theme.muted;
+            font-size: 11px;
+        }
+    }
+
+    // Fallback when no shape is known.
+    if !data.available: Text {
+        x: 0; y: pad-top + 30px;
+        width: 100px;
+        horizontal-alignment: center;
+        text: "shape n/a";
+        color: Theme.muted;
+        font-size: 11px;
+    }
+}

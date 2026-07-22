@@ -1,0 +1,79 @@
+// Shared data structs. These mirror the flattened views produced by bridge.rs
+// from the Rust domain model.
+
+export struct SegmentUI {
+    chord: string,
+    text: string,
+    has-chord: bool,
+}
+
+export struct LineUI {
+    kind: string,       // "lyric" | "section" | "tabref" | "blank"
+    label: string,      // section label, or resolved tab-ref label
+    tab-text: string,   // for a tab-ref: the ASCII tab (empty if missing)
+    tab-missing: bool,  // tab-ref with no matching block
+    segments: [SegmentUI],
+}
+
+export struct DiagramDot {
+    kind: string,       // "dot" | "open" | "muted"
+    string-idx: int,    // 0..5, low-E .. high-e
+    fret-offset: int,   // for "dot": fret - base-fret (0-based row)
+}
+
+export struct ChordDiagramData {
+    name: string,
+    available: bool,
+    base-fret: int,
+    show-nut: bool,
+    markers: [DiagramDot],
+    has-barre: bool,
+    barre-from: int,
+    barre-to: int,
+    barre-offset: int,  // barre.fret - base-fret
+}
+
+export struct TabBlockUI {
+    label: string,
+    text: string,
+}
+
+export struct StrumCell {
+    symbol: string,
+    label: string,
+    strong: bool,       // downbeat
+    dim: bool,          // soft stroke / rest
+}
+
+export struct NoteSummary {
+    id: string,
+    title: string,
+    artist: string,
+    key: string,
+    difficulty: string,
+    type-label: string,
+    tags: string,
+    created: string,
+}
+
+export struct NoteDetail {
+    id: string,
+    title: string,
+    artist: string,
+    key: string,            // already transposed for display
+    capo: int,
+    has-capo: bool,
+    difficulty: string,
+    is-chords: bool,
+    bpm: int,
+    has-bpm: bool,
+    transpose-steps: int,
+    transpose-label: string,
+    lines: [LineUI],
+    diagrams: [ChordDiagramData],
+    tab-blocks: [TabBlockUI],
+    strumming: [StrumCell],
+    has-strumming: bool,
+    has-diagrams: bool,
+    has-body: bool,
+}

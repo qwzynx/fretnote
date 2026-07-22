@@ -1,0 +1,457 @@
+import { Button, LineEdit, ScrollView } from "std-widgets.slint";
+import { Theme } from "theme.slint";
+import {
+    NoteSummary, NoteDetail, LineUI, SegmentUI,
+    ChordDiagramData, TabBlockUI, StrumCell
+} from "structs.slint";
+import { ChordDiagram } from "chord-diagram.slint";
+
+export {
+    NoteSummary, NoteDetail, LineUI, SegmentUI,
+    ChordDiagramData, TabBlockUI, StrumCell
+}
+
+export global Store {
+    in property <[NoteSummary]> notes;
+    in property <NoteDetail> detail;
+    in-out property <int> page;         // 0 = feed, 1 = reader
+    in-out property <int> font-size: 16;
+
+    callback open-note(string /* id */);
+    callback back();
+    callback search(string);
+    callback set-transpose(int /* absolute steps */);
+    callback new-note();
+}
+
+// ── Small reusable bits ──────────────────────────────────────────────────────
+
+component Chip inherits Rectangle {
+    in property <string> text;
+    in property <color> text-color: Theme.muted;
+    background: Theme.surface-alt;
+    border-radius: Theme.radius-sm;
+    height: 22px;
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        Text {
+            text: root.text;
+            color: root.text-color;
+            font-size: 12px;
+            vertical-alignment: center;
+        }
+    }
+}
+
+component IconButton inherits Rectangle {
+    in property <string> text;
+    callback clicked;
+    width: 30px;
+    height: 30px;
+    border-radius: Theme.radius-sm;
+    border-width: 1px;
+    border-color: Theme.border;
+    background: touch.pressed ? Theme.surface-alt : (touch.has-hover ? Theme.surface : transparent);
+    Text {
+        text: root.text;
+        color: Theme.foreground;
+        font-size: 16px;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    touch := TouchArea { clicked => { root.clicked(); } }
+}
+
+// ── Feed ─────────────────────────────────────────────────────────────────────
+
+component NoteCard inherits Rectangle {
+    in property <NoteSummary> note;
+    callback clicked;
+
+    border-radius: Theme.radius;
+    background: touch.has-hover ? Theme.surface-alt : Theme.surface;
+    border-width: 1px;
+    border-color: touch.has-hover ? Theme.primary-dim : Theme.border;
+
+    touch := TouchArea { clicked => { root.clicked(); } }
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 6px;
+
+        HorizontalLayout {
+            spacing: 8px;
+            Text {
+                text: note.title;
+                color: Theme.foreground;
+                font-size: Theme.font-lg;
+                font-weight: 700;
+                overflow: elide;
+                horizontal-stretch: 1;
+            }
+            Chip { text: note.type-label; text-color: Theme.primary; }
+        }
+        Text {
+            text: note.artist == "" ? "Unknown artist" : note.artist;
+            color: Theme.muted;
+            font-size: Theme.font-md;
+        }
+        HorizontalLayout {
+            spacing: 8px;
+            Text {
+                text: "Key " + note.key;
+                color: Theme.muted;
+                font-size: Theme.font-sm;
+            }
+            Text {
+                text: "· " + note.difficulty;
+                color: Theme.muted-dim;
+                font-size: Theme.font-sm;
+            }
+            if note.tags != "": Text {
+                text: "· " + note.tags;
+                color: Theme.muted-dim;
+                font-size: Theme.font-sm;
+                overflow: elide;
+                horizontal-stretch: 1;
+            }
+            Rectangle { horizontal-stretch: 1; }
+            Text {
+                text: note.created;
+                color: Theme.muted-dim;
+                font-size: Theme.font-sm;
+            }
+        }
+    }
+}
+
+component FeedView inherits Rectangle {
+    VerticalLayout {
+        padding: 24px;
+        spacing: 16px;
+
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: "Your songbook";
+                color: Theme.foreground;
+                font-size: 24px;
+                font-weight: 700;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            search := LineEdit {
+                width: 260px;
+                placeholder-text: "Search title, artist, tag…";
+                edited => { Store.search(self.text); }
+            }
+        }
+
+        Text {
+            text: Store.notes.length + (Store.notes.length == 1 ? " note" : " notes");
+            color: Theme.muted;
+            font-size: Theme.font-sm;
+        }
+
+        ScrollView {
+            vertical-stretch: 1;
+            VerticalLayout {
+                spacing: 12px;
+                for note in Store.notes: NoteCard {
+                    note: note;
+                    clicked => { Store.open-note(note.id); }
+                }
+                if Store.notes.length == 0: Text {
+                    text: "No notes yet.";
+                    color: Theme.muted;
+                    font-size: Theme.font-md;
+                }
+            }
+        }
+    }
+}
+
+// ── Reader ───────────────────────────────────────────────────────────────────
+
+component LyricLine inherits HorizontalLayout {
+    in property <LineUI> line;
+    in property <int> font-size;
+    alignment: start;
+    for seg in line.segments: VerticalLayout {
+        alignment: end;
+        Text {
+            text: seg.has-chord ? seg.chord : " ";
+            color: Theme.primary;
+            font-weight: 600;
+            font-size: root.font-size * 0.82 * 1px;
+            font-family: Theme.mono-family;
+            height: root.font-size * 1px;
+        }
+        Text {
+            text: seg.text == "" ? " " : seg.text;
+            color: Theme.foreground;
+            font-size: root.font-size * 1px;
+            font-family: Theme.mono-family;
+        }
+    }
+}
+
+component TabText inherits Rectangle {
+    in property <string> text;
+    in property <int> font-size;
+    background: Theme.surface.with-alpha(0.6);
+    border-radius: Theme.radius;
+    border-width: 1px;
+    border-color: Theme.border;
+    HorizontalLayout {
+        padding: 14px;
+        Text {
+            text: root.text;
+            color: Theme.foreground;
+            font-family: Theme.mono-family;
+            font-size: root.font-size * 1px;
+        }
+    }
+}
+
+component ReaderView inherits Rectangle {
+    property <NoteDetail> d: Store.detail;
+
+    ScrollView {
+        VerticalLayout {
+            padding: 24px;
+            spacing: 14px;
+
+            // Back + title
+            HorizontalLayout {
+                spacing: 12px;
+                IconButton { text: "‹"; clicked => { Store.back(); } }
+                VerticalLayout {
+                    Text {
+                        text: d.title;
+                        color: Theme.foreground;
+                        font-size: 26px;
+                        font-weight: 700;
+                    }
+                    Text {
+                        text: (d.artist == "" ? "Unknown artist" : d.artist)
+                            + "   ·   Key " + d.key
+                            + (d.has-capo ? "   ·   Capo " + d.capo : "")
+                            + "   ·   " + d.difficulty;
+                        color: Theme.muted;
+                        font-size: Theme.font-md;
+                    }
+                }
+            }
+
+            // Toolbar
+            HorizontalLayout {
+                spacing: 10px;
+
+                if d.is-chords: HorizontalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: "Transpose";
+                        color: Theme.muted;
+                        font-size: Theme.font-sm;
+                        vertical-alignment: center;
+                    }
+                    IconButton { text: "−"; clicked => { Store.set-transpose(d.transpose-steps - 1); } }
+                    Text {
+                        text: d.key + "  (" + d.transpose-label + ")";
+                        color: Theme.foreground;
+                        font-family: Theme.mono-family;
+                        font-size: Theme.font-sm;
+                        vertical-alignment: center;
+                        min-width: 84px;
+                        horizontal-alignment: center;
+                    }
+                    IconButton { text: "+"; clicked => { Store.set-transpose(d.transpose-steps + 1); } }
+                    if d.transpose-steps != 0: Button {
+                        text: "Reset";
+                        clicked => { Store.set-transpose(0); }
+                    }
+                }
+
+                Rectangle { width: 1px; background: Theme.border; }
+
+                HorizontalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: "Aa";
+                        color: Theme.muted;
+                        font-size: Theme.font-sm;
+                        vertical-alignment: center;
+                    }
+                    IconButton {
+                        text: "−";
+                        clicked => {
+                            Store.font-size = max(12, Store.font-size - 1);
+                        }
+                    }
+                    Text {
+                        text: Store.font-size;
+                        color: Theme.foreground;
+                        font-family: Theme.mono-family;
+                        font-size: Theme.font-sm;
+                        vertical-alignment: center;
+                        min-width: 24px;
+                        horizontal-alignment: center;
+                    }
+                    IconButton {
+                        text: "+";
+                        clicked => {
+                            Store.font-size = min(26, Store.font-size + 1);
+                        }
+                    }
+                }
+                Rectangle { horizontal-stretch: 1; }
+            }
+
+            // Chords used
+            if d.has-diagrams: Text {
+                text: "Chords in this note";
+                color: Theme.muted;
+                font-size: Theme.font-sm;
+                font-weight: 600;
+            }
+            if d.has-diagrams: ScrollView {
+                height: 140px;
+                viewport-width: d.diagrams.length * 116px;
+                HorizontalLayout {
+                    spacing: 12px;
+                    for diag in d.diagrams: ChordDiagram { data: diag; }
+                }
+            }
+
+            // Strumming
+            if d.has-strumming: Text {
+                text: d.has-bpm ? "Strumming · " + d.bpm + " BPM" : "Strumming";
+                color: Theme.muted;
+                font-size: Theme.font-sm;
+                font-weight: 600;
+            }
+            if d.has-strumming: HorizontalLayout {
+                alignment: start;
+                spacing: 2px;
+                for cell in d.strumming: VerticalLayout {
+                    width: 26px;
+                    Text {
+                        text: cell.symbol;
+                        color: cell.dim ? Theme.muted-dim : Theme.primary;
+                        font-size: 18px;
+                        horizontal-alignment: center;
+                    }
+                    Text {
+                        text: cell.label;
+                        color: cell.strong ? Theme.foreground : Theme.muted-dim;
+                        font-size: 11px;
+                        font-family: Theme.mono-family;
+                        horizontal-alignment: center;
+                    }
+                }
+            }
+
+            Rectangle { height: 1px; background: Theme.border; }
+
+            // Body — chord sheet
+            if d.is-chords: VerticalLayout {
+                spacing: 2px;
+                for line in d.lines: VerticalLayout {
+                    alignment: start;
+                    if line.kind == "blank": Rectangle { height: Store.font-size * 1.2px; }
+                    if line.kind == "section": Text {
+                        text: line.label;
+                        color: Theme.primary;
+                        font-weight: 700;
+                        font-size: Theme.font-sm;
+                        horizontal-alignment: left;
+                    }
+                    if line.kind == "tabref": VerticalLayout {
+                        spacing: 4px;
+                        padding-top: 6px;
+                        padding-bottom: 6px;
+                        Text {
+                            text: line.label;
+                            color: Theme.primary;
+                            font-weight: 700;
+                            font-size: Theme.font-sm;
+                            horizontal-alignment: left;
+                        }
+                        if !line.tab-missing: TabText { text: line.tab-text; font-size: Store.font-size; }
+                        if line.tab-missing: Text {
+                            text: "No tab named “" + line.label + "” yet.";
+                            color: Theme.muted;
+                            font-size: Theme.font-sm;
+                            horizontal-alignment: left;
+                        }
+                    }
+                    if line.kind == "lyric": LyricLine { line: line; font-size: Store.font-size; }
+                }
+            }
+
+            // Body — standalone tab blocks
+            if !d.is-chords: VerticalLayout {
+                spacing: 16px;
+                for block in d.tab-blocks: VerticalLayout {
+                    spacing: 6px;
+                    if block.label != "": Text {
+                        text: block.label;
+                        color: Theme.primary;
+                        font-weight: 700;
+                        font-size: Theme.font-sm;
+                    }
+                    TabText { text: block.text; font-size: Store.font-size; }
+                }
+            }
+
+            Rectangle { height: 24px; }
+        }
+    }
+}
+
+// ── Window ───────────────────────────────────────────────────────────────────
+
+export component AppWindow inherits Window {
+    title: "Fretnote";
+    preferred-width: 1280px;
+    preferred-height: 860px;
+    min-width: 800px;
+    min-height: 600px;
+    background: Theme.background;
+    default-font-size: Theme.font-md;
+
+    VerticalLayout {
+        // Header bar
+        Rectangle {
+            height: 52px;
+            background: Theme.surface;
+            HorizontalLayout {
+                padding-left: 20px;
+                padding-right: 20px;
+                spacing: 12px;
+                Text {
+                    text: "🎸 Fretnote";
+                    color: Theme.foreground;
+                    font-size: 18px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                }
+                Button {
+                    text: "New note";
+                    clicked => { Store.new-note(); }
+                }
+            }
+        }
+        Rectangle { height: 1px; background: Theme.border; }
+
+        // Page body
+        Rectangle {
+            vertical-stretch: 1;
+            if Store.page == 0: FeedView { }
+            if Store.page == 1: ReaderView { }
+        }
+    }
+}
