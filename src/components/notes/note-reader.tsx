@@ -122,6 +122,25 @@ export function NoteReader({ note }: { note: Note }) {
         </div>
       </div>
 
+      {/* Chords used */}
+      {note.chords.length > 0 && (
+        <div className="mb-6">
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <ChevronDown className="size-4" />
+            Chords in this note
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {note.chords.map((c) => (
+              <ChordDiagram
+                key={c}
+                name={transposeKey(c, note.type === "chords" ? transpose : 0)}
+                className="w-20"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Strumming pattern */}
       {note.strummingPattern?.some((s) => s !== "") && (
         <div className="mb-6">
@@ -154,25 +173,6 @@ export function NoteReader({ note }: { note: Note }) {
           ))}
         </div>
       ) : null}
-
-      {/* Chords used */}
-      {note.chords.length > 0 && (
-        <div className="mt-10">
-          <div className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <ChevronDown className="size-4" />
-            Chords in this note
-          </div>
-          <div className="flex flex-wrap gap-4">
-            {note.chords.map((c) => (
-              <ChordDiagram
-                key={c}
-                name={transposeKey(c, note.type === "chords" ? transpose : 0)}
-                className="w-20"
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

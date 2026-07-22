@@ -16,6 +16,24 @@ const SECTION_RE = /^\s*\[([^\]]+)\]\s*$/;
 const TABREF_RE = /^\s*\[\s*tab:\s*([^\]]+?)\s*\]\s*$/i;
 const INLINE_CHORD_RE = /\[([^\]]+)\]/g;
 
+// Non-chord labels that appear in bracket notation as structural/literary markers.
+const NON_CHORD_LABELS = new Set([
+  "verse", "chorus", "refrain", "pre-chorus", "pre chorus",
+  "bridge", "intro", "outro", "hook", "post-chorus", "post chorus",
+  "rhyme schemes", "repetition", "metaphors", "similes",
+  "vocalizations", "ad-libs", "storytelling", "imagery",
+]);
+
+function isNonChordLabel(s: string): boolean {
+  const lower = s.trim().toLowerCase();
+  if (NON_CHORD_LABELS.has(lower)) return true;
+  // Numbered variants like "Verse 1", "Chorus 2" (space already caught elsewhere,
+  // but handle hyphen-numbered variants too).
+  return /^(verse|chorus|refrain|pre-?chorus|bridge|intro|outro|hook|post-?chorus)\s*\d*$/i.test(
+    s.trim()
+  );
+}
+
 /**
  * Parse one line of a chord sheet written with inline [Chord] markers into
  * segments so chords can be rendered positioned above the syllable that
@@ -29,8 +47,8 @@ export function parseChordLine(line: string): ParsedLine {
   if (tabref) return { kind: "tabref", name: tabref[1].trim() };
 
   const section = line.match(SECTION_RE);
-  // Treat as a section header only when the label isn't a plain chord-ish token.
-  if (section && /\s/.test(section[1])) {
+  // Treat as a section header when the label has whitespace OR is a known structural term.
+  if (section && (/\s/.test(section[1]) || isNonChordLabel(section[1]))) {
     return { kind: "section", label: section[1].trim() };
   }
 
@@ -76,8 +94,8 @@ export function extractChords(sheet: string): string[] {
   INLINE_CHORD_RE.lastIndex = 0;
   while ((match = INLINE_CHORD_RE.exec(sheet)) !== null) {
     const chord = match[1].trim();
-    // Skip section headers like "Verse 1" and tab references like "tab: Intro".
-    if (/\s/.test(chord) || /^tab:/i.test(chord)) continue;
+    // Skip section headers, tab references, and non-chord structural/literary labels.
+    if (/\s/.test(chord) || /^tab:/i.test(chord) || isNonChordLabel(chord)) continue;
     if (!seen.has(chord)) {
       seen.add(chord);
       out.push(chord);
