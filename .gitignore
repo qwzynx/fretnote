@@ -21,6 +21,9 @@
 /build
 /dist
 
+# rust
+/target
+
 # tauri
 /src-tauri/target
 
