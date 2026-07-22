@@ -1,4 +1,6 @@
 
+import { memo } from "react";
+
 import type { TabColumn } from "@/lib/types";
 import { TAB_STRING_LABELS } from "@/lib/types";
 import { useElementWidth } from "@/hooks/use-element-width";
@@ -36,7 +38,7 @@ function buildStave(cols: TabColumn[], cellWidth: number): string[] {
  * the container they wrap onto stacked staves, the way printed tab breaks a
  * long line across several rows instead of scrolling off the page.
  */
-export function TabView({ tab, fontSize = 15, className }: TabViewProps) {
+export const TabView = memo(function TabView({ tab, fontSize = 15, className }: TabViewProps) {
   const [boxRef, innerWidth] = useElementWidth<HTMLDivElement>();
 
   const cellWidth = Math.max(
@@ -80,4 +82,4 @@ export function TabView({ tab, fontSize = 15, className }: TabViewProps) {
       </div>
     </div>
   );
-}
+});

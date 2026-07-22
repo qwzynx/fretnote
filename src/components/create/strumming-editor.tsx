@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { RotateCcw, Plus, Minus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -154,7 +154,7 @@ function DensityButton({ active, onClick, label }: { active: boolean; onClick: (
 }
 
 /** Compact read-only view of a strumming pattern for the summary. */
-export function StrummingPreview({ pattern }: { pattern: StrokeType[] }) {
+export const StrummingPreview = memo(function StrummingPreview({ pattern }: { pattern: StrokeType[] }) {
   if (!pattern.some((s) => s !== "")) return null;
   return (
     <div className="flex flex-wrap gap-0.5 font-mono text-lg leading-none">
@@ -165,4 +165,4 @@ export function StrummingPreview({ pattern }: { pattern: StrokeType[] }) {
       ))}
     </div>
   );
-}
+});

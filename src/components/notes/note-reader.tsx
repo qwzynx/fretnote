@@ -36,7 +36,7 @@ export function NoteReader({ note }: { note: Note }) {
   return (
     <div>
       {/* Toolbar */}
-      <div className="sticky top-14 z-20 -mx-4 mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border/80 bg-background/85 px-4 py-2.5 backdrop-blur">
+      <div className="sticky top-14 z-20 -mx-4 mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border/80 bg-background px-4 py-2.5">
         {note.type === "chords" && (
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground">Transpose</span>

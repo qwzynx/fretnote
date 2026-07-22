@@ -11,7 +11,7 @@ export function App() {
   return (
     <BrowserRouter>
       <TooltipProvider>
-        <div className="dark flex min-h-screen flex-col bg-background text-foreground antialiased">
+        <div className="flex min-h-screen flex-col bg-background text-foreground antialiased">
           <SiteHeader />
           <div className="flex-1">
             <Routes>

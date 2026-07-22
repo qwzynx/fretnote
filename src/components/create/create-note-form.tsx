@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -117,6 +117,14 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
     () => dedupe([...extractChords(chordSheet), ...manualChords]),
     [chordSheet, manualChords]
   );
+
+  // The live preview re-parses the sheet and re-renders every chord diagram and
+  // tab. Feeding it deferred values lets React update it at a lower priority so
+  // typing (and scrolling) stays responsive under the heavy re-render.
+  const previewSheet = useDeferredValue(chordSheet);
+  const previewChords = useDeferredValue(allChords);
+  const previewTabBlocks = useDeferredValue(tabBlocks);
+  const previewPattern = useDeferredValue(pattern);
 
   function addChord(name: string) {
     if (!allChords.includes(name)) setManualChords((c) => dedupe([...c, name]));
@@ -391,11 +399,11 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
         songKey={key}
         capo={capo}
         difficulty={difficulty}
-        pattern={pattern}
+        pattern={previewPattern}
         bpm={bpm}
-        chords={allChords}
-        sheet={chordSheet}
-        tabBlocks={tabBlocks}
+        chords={previewChords}
+        sheet={previewSheet}
+        tabBlocks={previewTabBlocks}
       />
     </div>
   );
@@ -443,7 +451,7 @@ function PreviewLabel({ children }: { children: React.ReactNode }) {
  *   5. the chords-over-lyrics body and the tab
  * Font size is adjustable so long lines and tabs can be checked.
  */
-function NotePreview({
+const NotePreview = memo(function NotePreview({
   title,
   artist,
   songKey,
@@ -594,4 +602,4 @@ function NotePreview({
       </div>
     </div>
   );
-}
+});

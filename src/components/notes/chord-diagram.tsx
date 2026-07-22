@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { getChordShape } from "@/lib/music/chords";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +14,7 @@ interface ChordDiagramProps {
  * Renders a guitar chord diagram as an SVG. Strings are drawn low-E (left)
  * to high-e (right), matching a chart viewed as if the guitar faces you.
  */
-export function ChordDiagram({
+export const ChordDiagram = memo(function ChordDiagram({
   name,
   className,
   frets = 5,
@@ -168,4 +170,4 @@ export function ChordDiagram({
       </svg>
     </div>
   );
-}
+});
