@@ -147,6 +147,11 @@ export function NoteReader({ note }: { note: Note }) {
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Strumming
           </p>
+          {note.bpm && (
+            <p className="mb-1.5 font-mono text-sm font-semibold text-foreground">
+              {note.bpm} BPM
+            </p>
+          )}
           <StrummingPreview pattern={note.strummingPattern as import("@/components/create/strumming-editor").StrokeType[]} />
         </div>
       )}

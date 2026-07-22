@@ -88,6 +88,7 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
   const [tuning, setTuning] = useState<Tuning>(DEFAULT_TUNING);
   const [manualChords, setManualChords] = useState<string[]>([]);
   const [pattern, setPattern] = useState<StrokeType[]>(emptyPattern());
+  const [bpm, setBpm] = useState<number | undefined>(undefined);
 
   const [finderOpen, setFinderOpen] = useState(false);
 
@@ -107,6 +108,7 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
       if (note.tabBlocks?.length) setTabBlocks(note.tabBlocks);
       setManualChords(note.chords);
       if (note.strummingPattern?.length) setPattern(note.strummingPattern as StrokeType[]);
+      if (note.bpm) setBpm(note.bpm);
     });
   }, [editId]);
 
@@ -318,6 +320,20 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
             <h2 className="font-heading text-base font-semibold">Strumming pattern</h2>
             <p className="text-xs text-muted-foreground">Build the strum — add bars for longer patterns.</p>
           </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="bpm">BPM</Label>
+            <Input
+              id="bpm"
+              type="number"
+              placeholder="—"
+              value={bpm ?? ""}
+              onChange={(e) => {
+                const v = e.target.value === "" ? undefined : Number(e.target.value);
+                setBpm(v);
+              }}
+              className="w-24"
+            />
+          </div>
           <StrummingEditor pattern={pattern} onChange={setPattern} />
         </section>
 
@@ -344,6 +360,7 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
                   tabBlocks: filledTabs.length ? filledTabs : undefined,
                   chords: allChords,
                   strummingPattern: pattern.some((s) => s !== "") ? pattern : undefined,
+                  bpm,
                 };
                 if (editId) {
                   await updateNote(editId, input);
@@ -375,6 +392,7 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
         capo={capo}
         difficulty={difficulty}
         pattern={pattern}
+        bpm={bpm}
         chords={allChords}
         sheet={chordSheet}
         tabBlocks={tabBlocks}
@@ -432,6 +450,7 @@ function NotePreview({
   capo,
   difficulty,
   pattern,
+  bpm,
   chords,
   sheet,
   tabBlocks,
@@ -442,6 +461,7 @@ function NotePreview({
   capo: number;
   difficulty: string;
   pattern: StrokeType[];
+  bpm?: number;
   chords: string[];
   sheet: string;
   tabBlocks: TabBlock[];
@@ -509,6 +529,11 @@ function NotePreview({
           {hasPattern && (
             <section>
               <PreviewLabel>Strumming</PreviewLabel>
+              {bpm && (
+                <p className="mb-1.5 font-mono text-sm font-semibold text-foreground">
+                  {bpm} BPM
+                </p>
+              )}
               <StrummingPreview pattern={pattern} />
             </section>
           )}

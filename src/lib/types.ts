@@ -46,6 +46,8 @@ export interface Note {
   chords: string[];
   /** Strumming pattern: each entry is a StrokeType character or empty string. */
   strummingPattern?: string[];
+  /** Beats per minute, shown above the strumming pattern. */
+  bpm?: number;
 }
 
 /** The 6 open guitar strings, low-E (6th) to high-e (1st). */

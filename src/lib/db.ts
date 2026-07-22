@@ -21,11 +21,15 @@ async function getDb(): Promise<Database> {
         chord_sheet       TEXT,
         tab_blocks        TEXT,
         chords            TEXT NOT NULL DEFAULT '[]',
-        strumming_pattern TEXT
+        strumming_pattern TEXT,
+        bpm               INTEGER
       )
     `);
     await _db.execute(
       `ALTER TABLE notes ADD COLUMN strumming_pattern TEXT`
+    ).catch(() => { /* column already exists */ });
+    await _db.execute(
+      `ALTER TABLE notes ADD COLUMN bpm INTEGER`
     ).catch(() => { /* column already exists */ });
   }
   return _db;
@@ -65,6 +69,7 @@ export interface NoteInput {
   tabBlocks?: TabBlock[];
   chords: string[];
   strummingPattern?: string[];
+  bpm?: number;
 }
 
 export async function createNote(input: NoteInput): Promise<Note> {
@@ -75,8 +80,8 @@ export async function createNote(input: NoteInput): Promise<Note> {
 
   await db.execute(
     `INSERT INTO notes
-       (id, slug, type, title, artist, key, capo, difficulty, tags, created_at, chord_sheet, tab_blocks, chords, strumming_pattern)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+       (id, slug, type, title, artist, key, capo, difficulty, tags, created_at, chord_sheet, tab_blocks, chords, strumming_pattern, bpm)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
     [
       id,
       slug,
@@ -92,6 +97,7 @@ export async function createNote(input: NoteInput): Promise<Note> {
       input.tabBlocks?.length ? JSON.stringify(input.tabBlocks) : null,
       JSON.stringify(input.chords),
       input.strummingPattern?.length ? JSON.stringify(input.strummingPattern) : null,
+      input.bpm ?? null,
     ]
   );
 
@@ -103,8 +109,8 @@ export async function updateNote(id: string, input: NoteInput): Promise<void> {
   await db.execute(
     `UPDATE notes SET
        type=$1, title=$2, artist=$3, key=$4, capo=$5, difficulty=$6,
-       tags=$7, chord_sheet=$8, tab_blocks=$9, chords=$10, strumming_pattern=$11
-     WHERE id=$12`,
+       tags=$7, chord_sheet=$8, tab_blocks=$9, chords=$10, strumming_pattern=$11, bpm=$12
+     WHERE id=$13`,
     [
       input.type,
       input.title,
@@ -117,6 +123,7 @@ export async function updateNote(id: string, input: NoteInput): Promise<void> {
       input.tabBlocks?.length ? JSON.stringify(input.tabBlocks) : null,
       JSON.stringify(input.chords),
       input.strummingPattern?.length ? JSON.stringify(input.strummingPattern) : null,
+      input.bpm ?? null,
       id,
     ]
   );
@@ -144,6 +151,7 @@ interface Row {
   tab_blocks: string | null;
   chords: string;
   strumming_pattern: string | null;
+  bpm: number | null;
 }
 
 function rowToNote(r: Row): Note {
@@ -162,6 +170,7 @@ function rowToNote(r: Row): Note {
     tabBlocks: r.tab_blocks ? JSON.parse(r.tab_blocks) : undefined,
     chords: JSON.parse(r.chords),
     strummingPattern: r.strumming_pattern ? JSON.parse(r.strumming_pattern) : undefined,
+    bpm: r.bpm ?? undefined,
   };
 }
 
