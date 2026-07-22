@@ -202,7 +202,7 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
                 max={12}
                 value={capo}
                 onChange={(e) => setCapo(Math.max(0, Math.min(12, Number(e.target.value))))}
-                className="w-20"
+                className="w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
@@ -331,7 +331,7 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
                 const v = e.target.value === "" ? undefined : Number(e.target.value);
                 setBpm(v);
               }}
-              className="w-24"
+              className="w-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
           <StrummingEditor pattern={pattern} onChange={setPattern} />
