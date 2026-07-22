@@ -44,6 +44,8 @@ export interface Note {
   tabBlocks?: TabBlock[];
   /** Chord names referenced by the note, used to render diagrams. */
   chords: string[];
+  /** Strumming pattern: each entry is a StrokeType character or empty string. */
+  strummingPattern?: string[];
 }
 
 /** The 6 open guitar strings, low-E (6th) to high-e (1st). */

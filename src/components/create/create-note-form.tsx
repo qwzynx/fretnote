@@ -106,6 +106,7 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
       setChordSheet(note.chordSheet ?? "");
       if (note.tabBlocks?.length) setTabBlocks(note.tabBlocks);
       setManualChords(note.chords);
+      if (note.strummingPattern?.length) setPattern(note.strummingPattern as StrokeType[]);
     });
   }, [editId]);
 
@@ -342,6 +343,7 @@ export function CreateNoteForm({ editId }: { editId?: string }) {
                   chordSheet: hasSheet ? chordSheet : undefined,
                   tabBlocks: filledTabs.length ? filledTabs : undefined,
                   chords: allChords,
+                  strummingPattern: pattern.some((s) => s !== "") ? pattern : undefined,
                 };
                 if (editId) {
                   await updateNote(editId, input);

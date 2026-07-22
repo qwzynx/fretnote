@@ -17,6 +17,7 @@ import { Slider } from "@/components/ui/slider";
 import { ChordLyricsView } from "./chord-lyrics-view";
 import { ChordDiagram } from "./chord-diagram";
 import { TabView } from "./tab-view";
+import { StrummingPreview } from "@/components/create/strumming-editor";
 
 const MIN_FONT = 12;
 const MAX_FONT = 26;
@@ -120,6 +121,16 @@ export function NoteReader({ note }: { note: Note }) {
           </div>
         </div>
       </div>
+
+      {/* Strumming pattern */}
+      {note.strummingPattern?.some((s) => s !== "") && (
+        <div className="mb-6">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Strumming
+          </p>
+          <StrummingPreview pattern={note.strummingPattern as import("@/components/create/strumming-editor").StrokeType[]} />
+        </div>
+      )}
 
       {/* Body */}
       {note.type === "chords" && note.chordSheet ? (
