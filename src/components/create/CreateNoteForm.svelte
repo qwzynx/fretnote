@@ -2,10 +2,11 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import { toast } from "svelte-sonner";
-  import { Music4, Guitar, Wand2, Plus } from "@lucide/svelte";
+  import { Music4, Guitar, Wand2, Plus, FileText, Loader2 } from "@lucide/svelte";
 
   import type { TabBlock, TabColumn } from "@/lib/types";
   import { createNote, updateNote, getNote } from "@/lib/db";
+  import { fetchLyrics } from "@/lib/lyrics";
   import { extractChords } from "@/lib/music/parse";
   import { TUNINGS, DEFAULT_TUNING } from "@/lib/music/tunings";
   import { emptyPattern, type StrokeType } from "@/lib/strumming";
@@ -54,6 +55,7 @@
   let { editId }: { editId?: string } = $props();
 
   let saving = $state(false);
+  let fetchingLyrics = $state(false);
   let title = $state("");
   let artist = $state("");
   let key = $state("C");
@@ -172,6 +174,28 @@
     insertAtCursor(`${lead}[tab: ${label}]\n`);
   }
 
+  async function handleFetchLyrics() {
+    fetchingLyrics = true;
+    try {
+      const lyrics = await fetchLyrics(artist.trim(), title.trim());
+      if (!lyrics) {
+        toast.error("Lyrics not found");
+        return;
+      }
+      if (chordSheet.trim()) {
+        toast("Replace chord sheet with fetched lyrics?", {
+          action: { label: "Replace", onClick: () => { chordSheet = lyrics; } },
+        });
+      } else {
+        chordSheet = lyrics;
+      }
+    } catch {
+      toast.error("Failed to fetch lyrics");
+    } finally {
+      fetchingLyrics = false;
+    }
+  }
+
   async function save() {
     saving = true;
     try {
@@ -283,15 +307,30 @@
       <div class="space-y-3">
         <div class="flex items-center justify-between">
           <Label for="chordsheet">Editor</Label>
-          <Button
-            variant={finderOpen ? "secondary" : "outline"}
-            size="sm"
-            onclick={() => (finderOpen = !finderOpen)}
-            aria-expanded={finderOpen}
-          >
-            <Wand2 />
-            Chord finder
-          </Button>
+          <div class="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!title.trim() || !artist.trim() || fetchingLyrics}
+              onclick={handleFetchLyrics}
+            >
+              {#if fetchingLyrics}
+                <Loader2 class="animate-spin" />
+              {:else}
+                <FileText />
+              {/if}
+              {fetchingLyrics ? "Fetching…" : "Fetch lyrics"}
+            </Button>
+            <Button
+              variant={finderOpen ? "secondary" : "outline"}
+              size="sm"
+              onclick={() => (finderOpen = !finderOpen)}
+              aria-expanded={finderOpen}
+            >
+              <Wand2 />
+              Chord finder
+            </Button>
+          </div>
         </div>
 
         <textarea
