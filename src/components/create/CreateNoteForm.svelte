@@ -193,7 +193,7 @@
 
 <div class="grid gap-8 lg:h-full lg:grid-cols-2 lg:gap-0">
   <!-- ══ Editors (left) ══════════════════════════════════════════ -->
-  <div class="min-w-0 space-y-8 lg:overflow-y-auto lg:pb-8 lg:pr-8">
+  <div class="min-w-0 space-y-8 lg:overflow-y-auto lg:pb-8 lg:pl-[max(1rem,calc(50vw-35rem))] lg:pr-8">
     <!-- Metadata -->
     <section class="space-y-4">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -383,7 +383,7 @@
   </div>
 
   <!-- ══ Preview (right) ═════════════════════════════════════════ -->
-  <div class="lg:overflow-y-auto lg:border-l lg:border-border lg:pl-8">
+  <div class="lg:overflow-y-auto lg:border-l lg:border-border lg:pl-8 lg:pr-[max(1rem,calc(50vw-35rem))]">
     <NotePreview
       {title}
       {artist}
