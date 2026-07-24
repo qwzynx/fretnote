@@ -61,8 +61,22 @@
     return result;
   });
 
-  // refs[rowIdx][colIdx]
+  // refs[rowIdx][globalColIdx]
   let refs: (HTMLInputElement | null)[][] = [];
+
+  function attachRef(node: HTMLInputElement, [row, col]: [number, number]) {
+    (refs[row] ??= [])[col] = node;
+    return {
+      update([newRow, newCol]: [number, number]) {
+        if (refs[row]?.[col] === node) (refs[row] as (HTMLInputElement | null)[])[col] = null;
+        row = newRow; col = newCol;
+        (refs[row] ??= [])[col] = node;
+      },
+      destroy() {
+        if (refs[row]?.[col] === node) (refs[row] as (HTMLInputElement | null)[])[col] = null;
+      },
+    };
+  }
 
   function setColumns(next: TabColumn[]) {
     onChange({ ...block, columns: next });
@@ -130,7 +144,7 @@
   <div class="flex items-center gap-2">
     <Input
       value={block.label}
-      oninput={(e) =>
+      oninput={(e: Event) =>
         onChange({
           ...block,
           label: (e.target as HTMLInputElement).value,
@@ -180,7 +194,7 @@
                 <div class="flex items-center">
                   <span class="select-none text-muted-foreground/30">–</span>
                   <input
-                    bind:this={refs[rowIdx] ??= [], refs[rowIdx][globalCi]}
+                    use:attachRef={[rowIdx, globalCi]}
                     value={block.columns[globalCi][strIdx]}
                     oninput={(e) =>
                       setCell(

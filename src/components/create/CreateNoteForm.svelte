@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import { toast } from "svelte-sonner";
-  import { Music4, Guitar, Wand2 } from "@lucide/svelte";
+  import { Music4, Guitar, Wand2, Plus } from "@lucide/svelte";
 
   import type { TabBlock, TabColumn } from "@/lib/types";
   import { createNote, updateNote, getNote } from "@/lib/db";
@@ -191,9 +191,9 @@
   }
 </script>
 
-<div class="grid gap-8 lg:grid-cols-2 lg:items-start">
+<div class="grid gap-8 lg:h-full lg:grid-cols-2 lg:gap-0">
   <!-- ══ Editors (left) ══════════════════════════════════════════ -->
-  <div class="min-w-0 space-y-8">
+  <div class="min-w-0 space-y-8 lg:overflow-y-auto lg:pb-8 lg:pr-8">
     <!-- Metadata -->
     <section class="space-y-4">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -335,7 +335,7 @@
       </div>
 
       <Button variant="outline" size="sm" onclick={addTabBlock}>
-        <Music4 />
+        <Plus />
         Add tab
       </Button>
     </section>
@@ -383,16 +383,18 @@
   </div>
 
   <!-- ══ Preview (right) ═════════════════════════════════════════ -->
-  <NotePreview
-    {title}
-    {artist}
-    songKey={key}
-    {capo}
-    {difficulty}
-    pattern={previewPattern}
-    {bpm}
-    chords={previewChords}
-    sheet={previewSheet}
-    tabBlocks={previewTabBlocks}
-  />
+  <div class="lg:overflow-y-auto lg:border-l lg:border-border lg:pl-8">
+    <NotePreview
+      {title}
+      {artist}
+      songKey={key}
+      {capo}
+      {difficulty}
+      pattern={previewPattern}
+      {bpm}
+      chords={previewChords}
+      sheet={previewSheet}
+      tabBlocks={previewTabBlocks}
+    />
+  </div>
 </div>

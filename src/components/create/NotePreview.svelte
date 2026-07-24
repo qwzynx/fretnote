@@ -70,14 +70,13 @@
   );
 </script>
 
-<div class="lg:sticky lg:top-20">
+<div
+  class="flex flex-col overflow-hidden rounded-xl border border-border bg-card/60 shadow-sm"
+>
+  <!-- Toolbar -->
   <div
-    class="flex flex-col overflow-hidden rounded-xl border border-border bg-card/60 shadow-sm"
+    class="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/30 px-3 py-2"
   >
-    <!-- Toolbar -->
-    <div
-      class="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/30 px-3 py-2"
-    >
       <div class="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
         <Eye class="size-3.5" />
         Preview
@@ -104,7 +103,7 @@
     </div>
 
     <!-- Body -->
-    <div class="max-h-[calc(100vh-8rem)] space-y-6 overflow-y-auto p-5">
+    <div class="space-y-6 p-5">
       <!-- Title & metadata -->
       <header>
         <h2 class="font-heading text-2xl font-semibold tracking-tight">
@@ -213,4 +212,3 @@
       {/if}
     </div>
   </div>
-</div>

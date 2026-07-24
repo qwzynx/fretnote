@@ -15,9 +15,9 @@
   };
 </script>
 
-<div class="flex min-h-screen flex-col bg-background text-foreground antialiased">
+<div class="flex h-dvh flex-col overflow-hidden bg-background text-foreground antialiased">
   <SiteHeader />
-  <div class="flex-1">
+  <div class="min-h-0 flex-1 overflow-y-auto">
     <Router {routes} />
   </div>
   <SiteFooter />

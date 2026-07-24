@@ -77,7 +77,7 @@
                     </button>
                   {/snippet}
                   {#snippet content()}
-                    <ChordDiagram name={seg.chord} />
+                    <ChordDiagram name={seg.chord!} />
                   {/snippet}
                 </Popover>
               {:else}
