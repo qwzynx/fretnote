@@ -1,13 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { PlusCircle, Sparkles } from "@lucide/svelte";
+  import { Clock, PlusCircle, Sparkles } from "@lucide/svelte";
   import { listNotes } from "@/lib/db";
   import type { Note } from "@/lib/types";
+  import { getRecentIds } from "@/lib/recent";
   import Button from "@/components/ui/Button.svelte";
   import FeedClient from "@/components/feed/FeedClient.svelte";
+  import NoteCard from "@/components/notes/NoteCard.svelte";
 
   let notes = $state<Note[]>([]);
   let loading = $state(true);
+  let feedQuery = $state("");
 
   onMount(async () => {
     try {
@@ -20,6 +23,17 @@
   function scrollToFeed() {
     document.getElementById("feed")?.scrollIntoView({ behavior: "smooth" });
   }
+
+  function handleToggleFavorite(id: string, value: boolean) {
+    notes = notes.map((n) => (n.id === id ? { ...n, isFavorite: value } : n));
+  }
+
+  const recentNotes = $derived(() => {
+    const ids = getRecentIds();
+    return ids
+      .map((id) => notes.find((n) => n.id === id))
+      .filter((n): n is Note => !!n);
+  });
 </script>
 
 <main class="mx-auto w-full max-w-6xl px-4 py-8">
@@ -55,12 +69,29 @@
     </div>
   </section>
 
+  <!-- Recently viewed -->
+  {#if !loading && recentNotes().length > 0 && !feedQuery}
+    <section class="mb-8">
+      <h2 class="mb-3 flex items-center gap-1.5 font-heading text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <Clock class="size-3.5" />
+        Recently viewed
+      </h2>
+      <div class="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+        {#each recentNotes() as note (note.id)}
+          <div class="w-52 shrink-0">
+            <NoteCard {note} onToggleFavorite={handleToggleFavorite} />
+          </div>
+        {/each}
+      </div>
+    </section>
+  {/if}
+
   <section id="feed" class="scroll-mt-20">
     <h2 class="mb-4 font-heading text-xl font-semibold">Your notes</h2>
     {#if loading}
       <p class="text-sm text-muted-foreground">Loading…</p>
     {:else}
-      <FeedClient {notes} />
+      <FeedClient {notes} onToggleFavorite={handleToggleFavorite} bind:query={feedQuery} />
     {/if}
   </section>
 </main>

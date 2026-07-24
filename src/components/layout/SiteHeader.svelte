@@ -1,12 +1,14 @@
 <script lang="ts">
   import { router } from "svelte-spa-router";
-  import { Guitar, Home, PlusCircle, Search } from "@lucide/svelte";
+  import { Guitar, Home, ListMusic, PlusCircle, Search, Settings } from "@lucide/svelte";
   import Button from "@/components/ui/Button.svelte";
   import { cn } from "@/lib/utils";
+  import { searchOpenStore } from "@/lib/search-open.svelte";
 
   const NAV = [
     { href: "/", label: "Notes", icon: Home },
     { href: "/create", label: "Create", icon: PlusCircle },
+    { href: "/setlists", label: "Setlists", icon: ListMusic },
   ];
 </script>
 
@@ -48,11 +50,15 @@
       <Button
         variant="outline"
         size="sm"
-        href="#/"
+        onclick={() => searchOpenStore.show()}
         class="hidden text-muted-foreground md:inline-flex"
       >
         <Search />
         Search notes
+        <kbd class="ml-1 rounded border border-border bg-muted px-1 font-mono text-[10px]">⌘K</kbd>
+      </Button>
+      <Button variant="ghost" size="icon-sm" href="#/settings" aria-label="Settings">
+        <Settings class="size-4" />
       </Button>
       <Button size="sm" href="#/create">
         <PlusCircle />

@@ -9,6 +9,7 @@
   import { extractChords } from "@/lib/music/parse";
   import { TUNINGS, DEFAULT_TUNING } from "@/lib/music/tunings";
   import { emptyPattern, type StrokeType } from "@/lib/strumming";
+  import { getSettings } from "@/lib/settings";
   import Button from "@/components/ui/Button.svelte";
   import Input from "@/components/ui/Input.svelte";
   import Label from "@/components/ui/Label.svelte";
@@ -18,6 +19,7 @@
   import TabEditor from "./TabEditor.svelte";
   import StrummingEditor from "./StrummingEditor.svelte";
   import NotePreview from "./NotePreview.svelte";
+  import TagInput from "./TagInput.svelte";
 
   const KEYS = [
     "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B",
@@ -57,6 +59,7 @@
   let key = $state("C");
   let capo = $state(0);
   let difficulty = $state("beginner");
+  let tags = $state<string[]>([]);
   let chordSheet = $state("");
   let tabBlocks = $state<TabBlock[]>([newTabBlock("Intro")]);
   let tuningId = $state(DEFAULT_TUNING.id);
@@ -93,8 +96,22 @@
     return () => cancelAnimationFrame(raf);
   });
 
+  function handleFormKey(e: KeyboardEvent) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      save();
+    }
+  }
+
   onMount(async () => {
-    if (!editId) return;
+    if (!editId) {
+      const s = getSettings();
+      key = s.defaultKey;
+      capo = s.defaultCapo;
+      difficulty = s.defaultDifficulty;
+      tuningId = s.defaultTuning;
+      return;
+    }
     const note = await getNote(editId);
     if (!note) return;
     title = note.title;
@@ -108,6 +125,7 @@
     if (note.strummingPattern?.length)
       pattern = note.strummingPattern as StrokeType[];
     if (note.bpm) bpm = note.bpm;
+    tags = note.tags ?? [];
   });
 
   function addChord(name: string) {
@@ -166,7 +184,7 @@
         key,
         capo,
         difficulty: difficulty as "beginner" | "intermediate" | "advanced",
-        tags: [],
+        tags,
         chordSheet: hasSheet ? chordSheet : undefined,
         tabBlocks: filledTabs.length ? filledTabs : undefined,
         chords: allChords,
@@ -190,6 +208,8 @@
     }
   }
 </script>
+
+<svelte:window onkeydown={handleFormKey} />
 
 <div class="grid gap-8 lg:h-full lg:grid-cols-2 lg:gap-0">
   <!-- ══ Editors (left) ══════════════════════════════════════════ -->
@@ -234,6 +254,11 @@
           <Label>Difficulty</Label>
           <Select bind:value={difficulty} items={DIFFICULTY_ITEMS} class="w-40" />
         </div>
+      </div>
+
+      <div class="space-y-1.5">
+        <Label>Tags</Label>
+        <TagInput {tags} onChange={(t) => (tags = t)} />
       </div>
     </section>
 

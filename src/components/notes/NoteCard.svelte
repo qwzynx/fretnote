@@ -1,12 +1,30 @@
 <script lang="ts">
-  import { Guitar, Music4 } from "@lucide/svelte";
+  import { Guitar, Heart, Music4 } from "@lucide/svelte";
+  import { toggleFavorite } from "@/lib/db";
   import type { Note } from "@/lib/types";
   import Card from "@/components/ui/Card.svelte";
   import CardContent from "@/components/ui/CardContent.svelte";
   import CardFooter from "@/components/ui/CardFooter.svelte";
   import Badge from "@/components/ui/Badge.svelte";
 
-  let { note }: { note: Note } = $props();
+  let {
+    note,
+    onToggleFavorite,
+  }: {
+    note: Note;
+    onToggleFavorite?: (id: string, value: boolean) => void;
+  } = $props();
+
+  let isFav = $state(note.isFavorite ?? false);
+
+  async function handleFavorite(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const next = !isFav;
+    isFav = next;
+    await toggleFavorite(note.id, next);
+    onToggleFavorite?.(note.id, next);
+  }
 
   const DIFFICULTY_LABEL: Record<Note["difficulty"], string> = {
     beginner: "Beginner",
@@ -65,8 +83,22 @@
     <span class="text-xs text-muted-foreground">
       {new Date(note.createdAt).toLocaleDateString()}
     </span>
-    <span class="text-xs text-muted-foreground">
-      {note.tags.slice(0, 3).map((t) => `#${t}`).join(" ")}
-    </span>
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-muted-foreground">
+        {note.tags.slice(0, 3).map((t) => `#${t}`).join(" ")}
+      </span>
+      <button
+        type="button"
+        onclick={handleFavorite}
+        aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+        class="rounded p-0.5 transition-colors hover:text-rose-500"
+      >
+        <Heart
+          class="size-3.5 {isFav
+            ? 'fill-rose-500 text-rose-500'
+            : 'text-muted-foreground'}"
+        />
+      </button>
+    </div>
   </CardFooter>
 </Card>

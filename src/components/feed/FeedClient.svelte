@@ -7,13 +7,16 @@
   import NoteCard from "@/components/notes/NoteCard.svelte";
   import { cn } from "@/lib/utils";
 
-  type Filter = "all" | NoteType;
+  import { Heart } from "@lucide/svelte";
+
+  type Filter = "all" | NoteType | "favorites";
   type Sort = "newest" | "oldest" | "title";
 
   const FILTERS: { value: Filter; label: string }[] = [
     { value: "all", label: "All" },
     { value: "chords", label: "Chords" },
     { value: "tab", label: "Tabs" },
+    { value: "favorites", label: "Favorites" },
   ];
 
   const SORT_ITEMS = [
@@ -24,17 +27,23 @@
 
   let {
     notes,
+    onToggleFavorite,
+    query = $bindable(""),
   }: {
     notes: Note[];
+    onToggleFavorite?: (id: string, value: boolean) => void;
+    query?: string;
   } = $props();
 
-  let query = $state("");
+  let _query = $state(query);
+  $effect(() => { query = _query; });
   let filter = $state<Filter>("all");
   let sort = $state<Sort>("newest");
 
   const results = $derived(() => {
-    const q = query.trim().toLowerCase();
+    const q = _query.trim().toLowerCase();
     let list = notes.filter((n) => {
+      if (filter === "favorites") return !!n.isFavorite;
       if (filter !== "all" && n.type !== filter) return false;
       if (!q) return true;
       return (
@@ -70,7 +79,7 @@
           class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
         />
         <Input
-          bind:value={query}
+          bind:value={_query}
           placeholder="Search songs, artists, tags or a chord…"
           class="h-10 pl-9"
         />
@@ -83,12 +92,15 @@
               type="button"
               onclick={() => (filter = f.value)}
               class={cn(
-                "rounded-md px-3 py-1.5 text-sm transition-colors",
+                "inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm transition-colors",
                 filter === f.value
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
+              {#if f.value === "favorites"}
+                <Heart class="size-3" />
+              {/if}
               {f.label}
             </button>
           {/each}
@@ -115,7 +127,7 @@
           size="sm"
           class="mt-3"
           onclick={() => {
-            query = "";
+            _query = "";
             filter = "all";
           }}
         >
@@ -125,7 +137,7 @@
     {:else}
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {#each results() as note (note.id)}
-          <NoteCard {note} />
+          <NoteCard {note} {onToggleFavorite} />
         {/each}
       </div>
     {/if}

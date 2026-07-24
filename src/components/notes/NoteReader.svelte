@@ -10,6 +10,7 @@
   import type { Note } from "@/lib/types";
   import { formatSemitones, transposeKey } from "@/lib/music/transpose";
   import type { StrokeType } from "@/lib/strumming";
+  import { getSettings } from "@/lib/settings";
   import Button from "@/components/ui/Button.svelte";
   import Separator from "@/components/ui/Separator.svelte";
   import Slider from "@/components/ui/Slider.svelte";
@@ -17,16 +18,18 @@
   import ChordDiagram from "./ChordDiagram.svelte";
   import TabView from "./TabView.svelte";
   import StrummingPreview from "@/components/create/StrummingPreview.svelte";
+  import Metronome from "./Metronome.svelte";
 
   const MIN_FONT = 12;
   const MAX_FONT = 26;
 
   let { note }: { note: Note } = $props();
 
+  const _s = getSettings();
   let transpose = $state(0);
-  let fontSize = $state(16);
+  let fontSize = $state(_s.defaultFontSize);
   let scrolling = $state(false);
-  let speed = $state(30);
+  let speed = $state(_s.defaultScrollSpeed);
 
   let rafId: number | null = null;
   let lastTs = 0;
@@ -70,7 +73,27 @@
   function clampFont(v: number) {
     fontSize = Math.min(MAX_FONT, Math.max(MIN_FONT, v));
   }
+
+  function handleKey(e: KeyboardEvent) {
+    if ((e.target as HTMLElement).matches("input, textarea, select, [contenteditable]")) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    if (e.key === " ") {
+      e.preventDefault();
+      scrolling = !scrolling;
+    } else if (e.key === "[" && note.type === "chords") {
+      transpose -= 1;
+    } else if (e.key === "]" && note.type === "chords") {
+      transpose += 1;
+    } else if (e.key === "+" || e.key === "=") {
+      clampFont(fontSize + 1);
+    } else if (e.key === "-") {
+      clampFont(fontSize - 1);
+    }
+  }
 </script>
+
+<svelte:window onkeydown={handleKey} />
 
 <div>
   <!-- Toolbar -->
@@ -187,6 +210,16 @@
         </p>
       {/if}
       <StrummingPreview pattern={note.strummingPattern as StrokeType[]} />
+    </div>
+  {/if}
+
+  <!-- Metronome -->
+  {#if note.bpm}
+    <div class="mb-6 rounded-lg border border-border bg-muted/20 p-4">
+      <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Metronome
+      </p>
+      <Metronome bpm={note.bpm} />
     </div>
   {/if}
 

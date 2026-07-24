@@ -48,10 +48,24 @@ export interface Note {
   strummingPattern?: string[];
   /** Beats per minute, shown above the strumming pattern. */
   bpm?: number;
+  /** Whether the note is starred by the user. */
+  isFavorite?: boolean;
 }
 
 /** The 6 open guitar strings, low-E (6th) to high-e (1st). */
 export const STRING_NAMES = ["E", "A", "D", "G", "B", "e"] as const;
+
+export interface Setlist {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  noteCount?: number;
+}
+
+export interface SetlistWithNotes extends Setlist {
+  notes: Note[];
+}
 
 /** Tab display order: high-e on top down to low-E. */
 export const TAB_STRING_LABELS = ["e", "B", "G", "D", "A", "E"] as const;
