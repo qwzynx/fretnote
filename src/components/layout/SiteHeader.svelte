@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { location } from "svelte-spa-router";
+  import { router } from "svelte-spa-router";
   import { Guitar, Home, PlusCircle, Search } from "@lucide/svelte";
   import Button from "@/components/ui/Button.svelte";
   import { cn } from "@/lib/utils";
@@ -27,8 +27,8 @@
       {#each NAV as item}
         {@const active =
           item.href === "/"
-            ? $location === "/"
-            : $location.startsWith(item.href)}
+            ? router.location === "/"
+            : router.location.startsWith(item.href)}
         <a
           href={`#${item.href}`}
           class={cn(
