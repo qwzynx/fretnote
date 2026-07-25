@@ -83,7 +83,7 @@ export async function copyTextToClipboard(text: string): Promise<void> {
   if (!ok) throw new Error("Copy failed");
 }
 
-function sanitizeFilename(name: string): string {
+export function sanitizeFilename(name: string): string {
   return name.replace(/[\\/:*?"<>|]/g, "-").trim() || "note";
 }
 
