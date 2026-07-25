@@ -1,5 +1,3 @@
-mod genius;
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // On Linux, WebKitGTK's DMABUF renderer produces a blank/black WebView on
@@ -15,10 +13,6 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_sql::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![
-            genius::genius_search,
-            genius::genius_get_lyrics
-        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

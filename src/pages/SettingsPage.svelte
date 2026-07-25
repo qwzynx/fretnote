@@ -4,13 +4,11 @@
   import { Settings2 } from "@lucide/svelte";
   import { getSettings, saveSettings, DEFAULT_SETTINGS } from "@/lib/settings";
   import type { Settings } from "@/lib/settings";
-  import { getGeniusToken, saveGeniusToken } from "@/lib/genius-settings";
   import { TUNINGS } from "@/lib/music/tunings";
   import Label from "@/components/ui/Label.svelte";
   import Select from "@/components/ui/Select.svelte";
   import Slider from "@/components/ui/Slider.svelte";
   import Button from "@/components/ui/Button.svelte";
-  import Input from "@/components/ui/Input.svelte";
   import Separator from "@/components/ui/Separator.svelte";
 
   const KEYS = [
@@ -28,16 +26,13 @@
   const TUNING_ITEMS = TUNINGS.map((t) => ({ value: t.id, label: t.label }));
 
   let s = $state<Settings>({ ...DEFAULT_SETTINGS });
-  let geniusToken = $state("");
 
   onMount(() => {
     s = getSettings();
-    geniusToken = getGeniusToken();
   });
 
   function handleSave() {
     saveSettings(s);
-    saveGeniusToken(geniusToken);
     toast.success("Settings saved");
   }
 
@@ -99,34 +94,6 @@
       <div class="space-y-1.5">
         <Label>Default tuning</Label>
         <Select bind:value={s.defaultTuning} items={TUNING_ITEMS} class="w-full max-w-xs" />
-      </div>
-    </section>
-
-    <Separator />
-
-    <!-- Lyrics source -->
-    <section class="space-y-4">
-      <h2 class="font-heading text-base font-semibold">Lyrics source</h2>
-
-      <div class="space-y-1.5">
-        <Label for="genius-token">Genius API token</Label>
-        <Input
-          id="genius-token"
-          type="password"
-          placeholder="Client Access Token"
-          bind:value={geniusToken}
-        />
-        <p class="text-xs text-muted-foreground">
-          Fetch lyrics from genius.com. Get a free Client Access Token at
-          <a
-            href="https://genius.com/api-clients"
-            target="_blank"
-            rel="noreferrer"
-            class="text-primary hover:underline"
-          >
-            genius.com/api-clients
-          </a>. Leave blank to use lrclib.net / lyrics.ovh only.
-        </p>
       </div>
     </section>
 

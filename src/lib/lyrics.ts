@@ -1,5 +1,24 @@
-import { similarity } from "@/lib/text-similarity";
-import { searchGenius, getGeniusLyrics } from "@/lib/genius";
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
+}
+
+function bigrams(s: string): Set<string> {
+  const out = new Set<string>();
+  for (let i = 0; i < s.length - 1; i++) out.add(s.slice(i, i + 2));
+  return out;
+}
+
+function similarity(a: string, b: string): number {
+  const na = normalize(a);
+  const nb = normalize(b);
+  if (!na || !nb) return 0;
+  if (na === nb) return 1;
+  const ba = bigrams(na);
+  const bb = bigrams(nb);
+  let overlap = 0;
+  for (const g of ba) if (bb.has(g)) overlap++;
+  return (2 * overlap) / (ba.size + bb.size);
+}
 
 function pickBest(
   data: { trackName?: string; artistName?: string; plainLyrics?: string }[],
@@ -21,34 +40,8 @@ function pickBest(
   return best?.plainLyrics ?? null;
 }
 
-async function tryGenius(artist: string, title: string): Promise<string | null> {
-  try {
-    const hits = await searchGenius(`${title} ${artist}`.trim());
-    if (hits.length === 0) return null;
-
-    let best = hits[0];
-    let bestScore = -1;
-    for (const hit of hits) {
-      const score = similarity(hit.title, title) * 0.6 + similarity(hit.artist, artist) * 0.4;
-      if (score > bestScore) {
-        bestScore = score;
-        best = hit;
-      }
-    }
-
-    const lyrics = await getGeniusLyrics(best.url);
-    return lyrics || null;
-  } catch {
-    return null;
-  }
-}
-
 export async function fetchLyrics(artist: string, title: string): Promise<string | null> {
   const headers = { "User-Agent": "Fretnote/1.0 (https://github.com/fretnote)" };
-
-  // 0. Genius (if a token is configured)
-  const geniusLyrics = await tryGenius(artist, title);
-  if (geniusLyrics) return geniusLyrics;
 
   // 1. lrclib — artist + title
   try {

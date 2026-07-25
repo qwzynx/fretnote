@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import { toast } from "svelte-sonner";
-  import { Music4, Guitar, Wand2, Plus, FileText, Loader2, Search } from "@lucide/svelte";
+  import { Music4, Guitar, Wand2, Plus, FileText, Loader2 } from "@lucide/svelte";
 
   import type { TabBlock, TabColumn } from "@/lib/types";
   import { createNote, updateNote, getNote } from "@/lib/db";
@@ -21,7 +21,6 @@
   import StrummingEditor from "./StrummingEditor.svelte";
   import NotePreview from "./NotePreview.svelte";
   import TagInput from "./TagInput.svelte";
-  import GeniusSearchDialog from "./GeniusSearchDialog.svelte";
 
   const KEYS = [
     "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B",
@@ -70,7 +69,6 @@
   let pattern = $state<StrokeType[]>(emptyPattern());
   let bpm = $state<number | undefined>(undefined);
   let finderOpen = $state(false);
-  let geniusDialogOpen = $state(false);
 
   let textareaEl: HTMLTextAreaElement;
 
@@ -198,18 +196,6 @@
     }
   }
 
-  function handleGeniusSelect(result: { title: string; artist: string; lyrics: string }) {
-    if (!title.trim()) title = result.title;
-    if (!artist.trim()) artist = result.artist;
-    if (chordSheet.trim()) {
-      toast("Replace chord sheet with imported lyrics?", {
-        action: { label: "Replace", onClick: () => { chordSheet = result.lyrics; } },
-      });
-    } else {
-      chordSheet = result.lyrics;
-    }
-  }
-
   async function save() {
     saving = true;
     try {
@@ -325,16 +311,6 @@
             <Button
               variant="outline"
               size="sm"
-              disabled={!title.trim() || !artist.trim()}
-              onclick={() => (geniusDialogOpen = true)}
-            >
-              <Search />
-              Search Genius…
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="text-muted-foreground"
               disabled={!title.trim() || !artist.trim() || fetchingLyrics}
               onclick={handleFetchLyrics}
             >
@@ -343,7 +319,7 @@
               {:else}
                 <FileText />
               {/if}
-              {fetchingLyrics ? "Fetching…" : "Quick fetch"}
+              {fetchingLyrics ? "Fetching…" : "Fetch lyrics"}
             </Button>
             <Button
               variant={finderOpen ? "secondary" : "outline"}
@@ -486,11 +462,3 @@
     />
   </div>
 </div>
-
-<GeniusSearchDialog
-  open={geniusDialogOpen}
-  initialTitle={title}
-  initialArtist={artist}
-  onclose={() => (geniusDialogOpen = false)}
-  onselect={handleGeniusSelect}
-/>
