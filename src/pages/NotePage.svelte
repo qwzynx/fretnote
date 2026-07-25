@@ -3,6 +3,7 @@
   import { push } from "svelte-spa-router";
   import { ArrowLeft, ChevronDown, Copy, Guitar, Heart, ListMusic, MoreHorizontal, Music4, Pencil, Printer, Trash2, X } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
+  import { writeText } from "@tauri-apps/plugin-clipboard-manager";
   import { getNote, deleteNote, toggleFavorite } from "@/lib/db";
   import { transposeKey } from "@/lib/music/transpose";
   import { noteToText } from "@/lib/export";
@@ -45,10 +46,14 @@
 
   async function handleCopyText() {
     if (!note) return;
-    await navigator.clipboard.writeText(noteToText(note));
-    toast.success("Copied to clipboard");
     exportOpen = false;
     actionsOpen = false;
+    try {
+      await writeText(noteToText(note));
+      toast.success("Copied to clipboard");
+    } catch {
+      toast.error("Couldn't copy to clipboard");
+    }
   }
 
   function handlePrint() {
