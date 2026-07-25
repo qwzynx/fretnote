@@ -8,6 +8,8 @@
     "sql:allow-execute",
     "sql:allow-select",
     "sql:allow-load",
-    "clipboard-manager:allow-write-text"
+    "clipboard-manager:allow-write-text",
+    "dialog:allow-save",
+    "fs:allow-write-file"
   ]
 }
