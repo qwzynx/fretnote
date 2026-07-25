@@ -17,10 +17,25 @@ export type TabColumn = [string, string, string, string, string, string];
  * they occur. A note can carry several of these; the label says where the
  * fragment belongs, e.g. "Intro" or "Solo".
  */
+/**
+ * The hand shape an author recommends for a tab: hold this and the whole
+ * fragment is under your fingers without moving up the neck. Frets are per
+ * string, low-E (index 0) first: -1 muted, 0 open, n fretted.
+ */
+export interface TabHint {
+  frets: [number, number, number, number, number, number];
+  /** The grip's chord name when it has one, e.g. "Em" or "Am (5fr)". */
+  shape?: string;
+  /** Anything else the author wants to tell the player. */
+  note?: string;
+}
+
 export interface TabBlock {
   id: string;
   label: string;
   columns: TabColumn[];
+  /** Optional fingering advice shown with the tab. */
+  hint?: TabHint;
 }
 
 export interface Note {

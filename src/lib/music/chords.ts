@@ -52,6 +52,12 @@ const SHAPES: Record<string, ChordShape> = {
   B7: { frets: [-1, 2, 1, 2, 0, 2], baseFret: 1 },
   Bm: { frets: [-1, 2, 4, 4, 3, 2], baseFret: 2, barre: { fret: 2, from: 1, to: 5 } },
   Bm7: { frets: [-1, 2, 0, 2, 0, 2], baseFret: 1 },
+  // Power chords: the open pair plus one movable grip per root string, which the
+  // catalog slides up the neck to cover riffs anywhere.
+  E5: { frets: [0, 2, 2, -1, -1, -1], baseFret: 1 },
+  A5: { frets: [-1, 0, 2, 2, -1, -1], baseFret: 1 },
+  F5: { frets: [1, 3, 3, -1, -1, -1], baseFret: 1 },
+  Bb5: { frets: [-1, 1, 3, 3, -1, -1], baseFret: 1 },
 };
 
 /**
@@ -79,6 +85,52 @@ export function getChordShape(name: string): ChordShape | null {
     }
   }
   return null;
+}
+
+/** A shape can slide up the neck only if it leans on no open strings. */
+function isMovable(shape: ChordShape): boolean {
+  return !shape.frets.includes(0);
+}
+
+export interface CatalogEntry {
+  name: string;
+  shape: ChordShape;
+}
+
+let catalog: CatalogEntry[] | null = null;
+
+/**
+ * Every grip the library can offer: each known shape where it sits, plus the
+ * movable (barre) shapes repeated up the neck. Open shapes are left where they
+ * are — sliding one up would keep its open strings and stop being the chord its
+ * transposed name claims.
+ */
+export function chordShapeCatalog(): CatalogEntry[] {
+  if (catalog) return catalog;
+
+  const entries: CatalogEntry[] = [];
+  const seen = new Set<string>();
+
+  const add = (name: string, shape: ChordShape) => {
+    const key = shape.frets.join(",");
+    if (seen.has(key)) return;
+    seen.add(key);
+    entries.push({ name, shape });
+  };
+
+  for (const [name, shape] of Object.entries(SHAPES)) add(name, shape);
+
+  for (const [name, shape] of Object.entries(SHAPES)) {
+    if (!isMovable(shape)) continue;
+    for (let semitones = 1; semitones <= 12; semitones++) {
+      const shifted = shiftShape(shape, semitones);
+      if (Math.max(...shifted.frets) > 15) break;
+      add(transposeChord(name, semitones), shifted);
+    }
+  }
+
+  catalog = entries;
+  return entries;
 }
 
 function shiftShape(shape: ChordShape, semitones: number): ChordShape {

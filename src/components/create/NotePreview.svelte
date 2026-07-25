@@ -9,7 +9,7 @@
   import ChordLyricsView from "@/components/notes/ChordLyricsView.svelte";
   import ChordDiagram from "@/components/notes/ChordDiagram.svelte";
   import TabView from "@/components/notes/TabView.svelte";
-  import TabFingerGuide from "@/components/notes/TabFingerGuide.svelte";
+  import TabHintView from "@/components/notes/TabHintView.svelte";
   import FingerLegend from "@/components/notes/FingerLegend.svelte";
   import StrummingPreview from "./StrummingPreview.svelte";
 
@@ -197,12 +197,10 @@
                     {block.label}
                   </p>
                 {/if}
+                {#if block.hint}
+                  <TabHintView hint={block.hint} {stringNames} class="mb-3" />
+                {/if}
                 <TabView tab={block.columns} {fontSize} />
-                <TabFingerGuide
-                  columns={block.columns}
-                  {stringNames}
-                  class="mt-2"
-                />
               </div>
             {/each}
           </div>
