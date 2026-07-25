@@ -87,6 +87,54 @@ export async function createSetlist(title: string, description = ""): Promise<Se
   return { id, title, description, createdAt: now, noteCount: 0 };
 }
 
+/** Inserts a setlist as-is, or overwrites the row with the same id. Used by library import. */
+export async function upsertSetlist(setlist: Setlist): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    `INSERT INTO setlists (id, title, description, created_at)
+     VALUES ($1,$2,$3,$4)
+     ON CONFLICT(id) DO UPDATE SET
+       title=excluded.title,
+       description=excluded.description,
+       created_at=excluded.created_at`,
+    [setlist.id, setlist.title, setlist.description, setlist.createdAt]
+  );
+}
+
+export interface SetlistItemInput {
+  id: string;
+  setlistId: string;
+  noteId: string;
+  position: number;
+}
+
+export async function listAllSetlistItems(): Promise<SetlistItemInput[]> {
+  const db = await getDb();
+  const rows = await db.select<{ id: string; setlist_id: string; note_id: string; position: number }[]>(
+    "SELECT id, setlist_id, note_id, position FROM setlist_items"
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    setlistId: r.setlist_id,
+    noteId: r.note_id,
+    position: r.position,
+  }));
+}
+
+/** Inserts a setlist item as-is, or overwrites the row with the same id. Used by library import. */
+export async function upsertSetlistItem(item: SetlistItemInput): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    `INSERT INTO setlist_items (id, setlist_id, note_id, position)
+     VALUES ($1,$2,$3,$4)
+     ON CONFLICT(id) DO UPDATE SET
+       setlist_id=excluded.setlist_id,
+       note_id=excluded.note_id,
+       position=excluded.position`,
+    [item.id, item.setlistId, item.noteId, item.position]
+  );
+}
+
 export async function updateSetlist(id: string, title: string, description: string): Promise<void> {
   const db = await getDb();
   await db.execute("UPDATE setlists SET title=$1, description=$2 WHERE id=$3", [title, description, id]);

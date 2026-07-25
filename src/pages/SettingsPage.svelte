@@ -5,6 +5,7 @@
   import { getSettings, saveSettings, DEFAULT_SETTINGS } from "@/lib/settings";
   import type { Settings } from "@/lib/settings";
   import { TUNINGS } from "@/lib/music/tunings";
+  import { exportLibrary, importLibrary } from "@/lib/backup";
   import Label from "@/components/ui/Label.svelte";
   import Select from "@/components/ui/Select.svelte";
   import Slider from "@/components/ui/Slider.svelte";
@@ -40,6 +41,42 @@
     s = { ...DEFAULT_SETTINGS };
     saveSettings(s);
     toast.success("Settings reset to defaults");
+  }
+
+  let exporting = $state(false);
+  let importing = $state(false);
+
+  async function handleExportLibrary() {
+    exporting = true;
+    try {
+      const saved = await exportLibrary();
+      if (saved) toast.success("Library exported");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      exporting = false;
+    }
+  }
+
+  async function handleImportLibrary() {
+    if (
+      !confirm(
+        "Import a library file? Any local note or setlist that shares an ID with one in the file will be overwritten. Nothing else is deleted."
+      )
+    ) {
+      return;
+    }
+    importing = true;
+    try {
+      const result = await importLibrary();
+      if (result) {
+        toast.success(`Imported ${result.notes} note${result.notes === 1 ? "" : "s"} and ${result.setlists} setlist${result.setlists === 1 ? "" : "s"}`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      importing = false;
+    }
   }
 </script>
 
@@ -137,6 +174,36 @@
         <p class="text-xs text-muted-foreground">
           Auto-scroll speed when starting playback (5 – 100 px/s).
         </p>
+      </div>
+    </section>
+
+    <Separator />
+
+    <!-- Backup & sync -->
+    <section class="space-y-4">
+      <h2 class="font-heading text-base font-semibold">Backup & sync</h2>
+      <p class="text-sm text-muted-foreground">
+        Export your whole library (notes and setlists) to a file, then import it on
+        another device to bring the two in sync.
+      </p>
+
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <Button
+          variant="outline"
+          class="w-full sm:w-auto"
+          disabled={exporting}
+          onclick={handleExportLibrary}
+        >
+          {exporting ? "Exporting…" : "Export library"}
+        </Button>
+        <Button
+          variant="outline"
+          class="w-full sm:w-auto"
+          disabled={importing}
+          onclick={handleImportLibrary}
+        >
+          {importing ? "Importing…" : "Import library"}
+        </Button>
       </div>
     </section>
 
