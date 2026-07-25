@@ -16,6 +16,7 @@
   import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp.svelte";
   import SearchPalette from "@/components/SearchPalette.svelte";
   import { searchOpenStore } from "@/lib/search-open.svelte";
+  import { initOverlayHistory, closeTopLayer } from "@/lib/overlay-history.svelte";
 
   const routes = {
     "/": FeedPage,
@@ -57,20 +58,26 @@
     }
 
     if (e.key === "Escape") {
-      window.history.back();
+      // Close the topmost sheet/dialog/popover if one is open; otherwise
+      // fall through to normal browser back navigation.
+      if (!closeTopLayer()) window.history.back();
     }
   }
 
   onMount(() => {
     window.addEventListener("keydown", handleGlobalKey);
-    return () => window.removeEventListener("keydown", handleGlobalKey);
+    const cleanupOverlayHistory = initOverlayHistory();
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKey);
+      cleanupOverlayHistory();
+    };
   });
 </script>
 
 <div class="flex h-dvh flex-col overflow-hidden bg-background text-foreground antialiased">
   <SiteHeader />
   <!-- Padded on phones so content can always scroll clear of the floating nav. -->
-  <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-navbar md:pb-0">
+  <div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pb-navbar md:pb-0">
     <Router {routes} />
     <SiteFooter />
   </div>

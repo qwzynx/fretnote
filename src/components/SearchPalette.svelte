@@ -5,11 +5,15 @@
   import { listNotes } from "@/lib/db";
   import type { Note } from "@/lib/types";
   import { searchOpenStore } from "@/lib/search-open.svelte";
+  import { historyLayer } from "@/lib/overlay-history.svelte";
+  import { dragDismiss } from "@/lib/actions/drag-dismiss";
+  import { isPhone } from "@/lib/media.svelte";
 
   let allNotes = $state<Note[]>([]);
   let query = $state("");
   let activeIdx = $state(0);
   let inputEl: HTMLInputElement;
+  let resultsEl: HTMLElement;
 
   const results = $derived(() => {
     const q = query.trim().toLowerCase();
@@ -38,9 +42,10 @@
     searchOpenStore.hide();
   }
 
+  const layer = historyLayer(() => searchOpenStore.open, close);
+
   function openNote(note: Note) {
-    push(`/notes/${note.id}`);
-    close();
+    layer.dismiss(() => push(`/notes/${note.id}`));
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -75,8 +80,18 @@
     onkeydown={(e) => { if (e.key === "Escape") close(); }}
   >
     <div
+      use:dragDismiss={{
+        onDismiss: close,
+        scroller: () => resultsEl,
+        enabled: () => isPhone.current,
+      }}
       class="flex w-full flex-col overflow-hidden border-border bg-card pt-[env(safe-area-inset-top,0px)] shadow-2xl sm:h-auto sm:max-w-xl sm:rounded-xl sm:border sm:pt-0"
     >
+      <!-- Grab handle: phone only, mirrors the bottom-sheet affordance. -->
+      <div class="flex justify-center pb-1 pt-2 sm:hidden">
+        <div class="h-1 w-10 rounded-full bg-muted-foreground/30"></div>
+      </div>
+
       <!-- Input -->
       <div class="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
         <Search class="size-4 shrink-0 text-muted-foreground" />
@@ -99,7 +114,10 @@
       </div>
 
       <!-- Results -->
-      <div class="flex-1 overflow-y-auto overscroll-contain py-1 sm:max-h-80 sm:flex-none">
+      <div
+        bind:this={resultsEl}
+        class="flex-1 overflow-y-auto overscroll-contain py-1 sm:max-h-80 sm:flex-none"
+      >
         {#if results().length === 0}
           <p class="px-4 py-6 text-center text-sm text-muted-foreground">
             {query ? "No notes found." : "Start typing to search…"}

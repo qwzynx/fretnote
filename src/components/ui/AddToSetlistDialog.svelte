@@ -3,6 +3,9 @@
   import { Check, ListMusic, Plus, X } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import { listSetlists, createSetlist, addNoteToSetlist, removeFromSetlist, getSetlistsForNote } from "@/lib/setlists";
+  import { historyLayer } from "@/lib/overlay-history.svelte";
+  import { dragDismiss } from "@/lib/actions/drag-dismiss";
+  import { isPhone } from "@/lib/media.svelte";
   import type { Setlist } from "@/lib/types";
 
   let {
@@ -14,6 +17,10 @@
     open: boolean;
     onclose: () => void;
   } = $props();
+
+  historyLayer(() => open, () => onclose());
+
+  let listEl: HTMLElement;
 
   let setlists = $state<Setlist[]>([]);
   let membership = $state<Map<string, string>>(new Map()); // setlistId → itemId
@@ -85,8 +92,17 @@
   >
     <!-- Bottom sheet on phones, centred dialog on larger screens. -->
     <div
+      use:dragDismiss={{
+        onDismiss: onclose,
+        scroller: () => listEl,
+        enabled: () => isPhone.current,
+      }}
       class="w-full overflow-hidden rounded-t-2xl border-t border-border bg-card pb-[env(safe-area-inset-bottom,0px)] shadow-2xl sm:max-w-sm sm:rounded-xl sm:border sm:pb-0"
     >
+      <div class="flex justify-center pb-1 pt-2 sm:hidden">
+        <div class="h-1 w-10 rounded-full bg-muted-foreground/30"></div>
+      </div>
+
       <div class="flex items-center justify-between border-b border-border px-4 py-3">
         <div class="flex items-center gap-2 font-medium">
           <ListMusic class="size-4 text-primary" />
@@ -102,7 +118,7 @@
         </button>
       </div>
 
-      <div class="max-h-[45vh] overflow-y-auto overscroll-contain py-1 sm:max-h-64">
+      <div bind:this={listEl} class="max-h-[45vh] overflow-y-auto overscroll-contain py-1 sm:max-h-64">
         {#if loading}
           <p class="px-4 py-4 text-sm text-muted-foreground">Loading…</p>
         {:else if setlists.length === 0}

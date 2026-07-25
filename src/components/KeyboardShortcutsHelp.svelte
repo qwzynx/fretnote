@@ -1,5 +1,6 @@
 <script lang="ts">
   import { X } from "@lucide/svelte";
+  import { historyLayer } from "@/lib/overlay-history.svelte";
 
   let {
     open,
@@ -9,11 +10,13 @@
     onclose: () => void;
   } = $props();
 
+  historyLayer(() => open, () => onclose());
+
   const GLOBAL = [
     { keys: ["Ctrl", "N"], desc: "New note" },
     { keys: ["Ctrl", "K"], desc: "Quick search" },
     { keys: ["?"], desc: "Show this help" },
-    { keys: ["Esc"], desc: "Go back" },
+    { keys: ["Esc"], desc: "Close / dismiss" },
   ];
 
   const READER = [

@@ -121,7 +121,7 @@
 <div class="w-full rounded-lg border border-border bg-muted/20 p-4">
   <!-- Header: what this is, and how you want to pick the shape -->
   <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-    <div class="min-w-[14rem] flex-1 space-y-1">
+    <div class="min-w-0 flex-1 space-y-1 sm:min-w-[14rem]">
       <p class="flex items-center gap-2 text-sm font-medium">
         <Hand class="size-4 text-primary" />
         Finger placement
@@ -133,7 +133,7 @@
     </div>
 
     <div
-      class="flex shrink-0 gap-1 rounded-lg border border-border bg-background p-1"
+      class="flex w-full gap-1 rounded-lg border border-border bg-background p-1 sm:w-auto sm:shrink-0"
     >
       {#each MODES as m}
         {@const Icon = m.Icon}
@@ -141,7 +141,7 @@
           type="button"
           onclick={() => (mode = m.id)}
           class={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+            "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors sm:flex-none sm:px-3",
             mode === m.id
               ? "bg-muted text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
@@ -249,10 +249,10 @@
           fingering={fingering}
           stringNames={tuning.names}
           label="Recommended hand shape"
-          class="w-[152px] shrink-0"
+          class="w-[8.5rem] shrink-0 sm:w-[152px]"
         />
 
-        <div class="min-w-[12rem] flex-1 space-y-3">
+        <div class="min-w-0 flex-1 space-y-3 sm:min-w-[12rem]">
           <div class="space-y-1">
             {#if active.shape}
               <p class="font-mono text-sm font-semibold text-foreground">

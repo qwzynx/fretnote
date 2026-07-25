@@ -22,9 +22,9 @@
 
   const W = 100;
   const H = 132;
-  /** Wider on the left so the "5fr" label has room next to the grid. */
-  const padL = 20;
-  const padR = 10;
+  /** Wider on the left so a two-digit base-fret label ("12fr") doesn't clip against the viewBox edge. */
+  const padL = 24;
+  const padR = 8;
   const padTop = 26;
   const gridW = W - padL - padR;
   const gridH = 78;
@@ -179,7 +179,7 @@
     font-weight: 600;
   }
   .chord-diagram-basefret {
-    font-size: 9px;
+    font-size: 8px;
   }
   .chord-diagram-mute {
     font-size: 10px;

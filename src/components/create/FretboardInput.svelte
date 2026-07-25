@@ -27,7 +27,7 @@
   const fingering = $derived(fingerShape(frets));
   const fretRows = $derived(Array.from({ length: fretCount }, (_, i) => i + 1));
   // Roomier cells on phones — this grid is tapped, not clicked.
-  const col = "w-11 sm:w-9";
+  const col = "w-10 sm:w-9";
   const row = "h-11 sm:h-9";
 </script>
 

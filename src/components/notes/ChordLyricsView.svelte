@@ -30,7 +30,10 @@
   );
 </script>
 
-<div class={cn("font-mono leading-relaxed", className)} style="font-size: {fontSize}px">
+<div
+  class={cn("max-w-full font-mono leading-relaxed sm:overflow-x-auto", className)}
+  style="font-size: {fontSize}px"
+>
   {#each lines as line, i}
     {#if line.kind === "blank"}
       <div style="height: {fontSize * 1.4}px"></div>
@@ -65,9 +68,9 @@
         {/if}
       </div>
     {:else}
-      <div class="flex flex-wrap items-end">
+      <div class="flex flex-wrap items-end sm:flex-nowrap">
         {#each line.segments as seg, j}
-          <span class="inline-flex flex-col">
+          <span class="inline-flex max-w-full flex-col sm:max-w-none">
             <span
               class="h-5 font-semibold leading-5 text-primary"
               style="font-size: {fontSize * 0.82}px"
@@ -91,7 +94,7 @@
                 {" "}
               {/if}
             </span>
-            <span class="whitespace-pre">
+            <span class="whitespace-pre-wrap break-words sm:whitespace-pre sm:break-normal">
               {seg.text === "" ? " " : seg.text}
             </span>
           </span>

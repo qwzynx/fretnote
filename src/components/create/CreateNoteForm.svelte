@@ -12,6 +12,8 @@
   import { emptyPattern, type StrokeType } from "@/lib/strumming";
   import { getSettings } from "@/lib/settings";
   import { cn } from "@/lib/utils";
+  import { isCompact } from "@/lib/media.svelte";
+  import { closeAllLayers, historyLayer } from "@/lib/overlay-history.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Input from "@/components/ui/Input.svelte";
   import Label from "@/components/ui/Label.svelte";
@@ -72,6 +74,13 @@
   let finderOpen = $state(false);
   /** Below `lg` the two columns don't fit side by side, so they take turns. */
   let mobilePane = $state<"edit" | "preview">("edit");
+
+  // Below `lg`, switching to Preview is a real history step so back returns
+  // to Edit instead of leaving the page.
+  historyLayer(
+    () => isCompact.current && mobilePane === "preview",
+    () => (mobilePane = "edit")
+  );
 
   let textareaEl: HTMLTextAreaElement;
 
@@ -479,7 +488,7 @@
       <Button
         variant="outline"
         class="w-full sm:w-auto"
-        onclick={() => window.history.back()}
+        onclick={() => closeAllLayers(() => window.history.back())}
       >
         Cancel
       </Button>
