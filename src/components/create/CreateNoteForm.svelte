@@ -459,6 +459,7 @@
       chords={previewChords}
       sheet={previewSheet}
       tabBlocks={previewTabBlocks}
+      stringNames={tuning.names}
     />
   </div>
 </div>

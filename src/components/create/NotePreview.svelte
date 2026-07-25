@@ -9,6 +9,8 @@
   import ChordLyricsView from "@/components/notes/ChordLyricsView.svelte";
   import ChordDiagram from "@/components/notes/ChordDiagram.svelte";
   import TabView from "@/components/notes/TabView.svelte";
+  import TabFingerGuide from "@/components/notes/TabFingerGuide.svelte";
+  import FingerLegend from "@/components/notes/FingerLegend.svelte";
   import StrummingPreview from "./StrummingPreview.svelte";
 
   const MIN_FONT = 13;
@@ -34,6 +36,7 @@
     chords,
     sheet,
     tabBlocks,
+    stringNames,
   }: {
     title: string;
     artist: string;
@@ -45,6 +48,8 @@
     chords: string[];
     sheet: string;
     tabBlocks: TabBlock[];
+    /** String labels for the finger-placement diagrams. */
+    stringNames?: readonly string[];
   } = $props();
 
   let fontSize = $state(16);
@@ -155,9 +160,10 @@
           </p>
           <div class="flex flex-wrap gap-3">
             {#each chords as c}
-              <ChordDiagram name={c} class="w-16" />
+              <ChordDiagram name={c} class="w-20" />
             {/each}
           </div>
+          <FingerLegend class="mt-2" />
         </section>
       {/if}
 
@@ -170,7 +176,7 @@
             Song
           </p>
           <div class="overflow-x-auto">
-            <ChordLyricsView {sheet} {fontSize} {tabBlocks} />
+            <ChordLyricsView {sheet} {fontSize} {tabBlocks} {stringNames} />
           </div>
         </section>
       {/if}
@@ -192,6 +198,11 @@
                   </p>
                 {/if}
                 <TabView tab={block.columns} {fontSize} />
+                <TabFingerGuide
+                  columns={block.columns}
+                  {stringNames}
+                  class="mt-2"
+                />
               </div>
             {/each}
           </div>

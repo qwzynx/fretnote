@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fingerShape } from "@/lib/music/fingering";
   import { cn } from "@/lib/utils";
 
   export type Frets = [number, number, number, number, number, number];
@@ -23,6 +24,7 @@
     onChange(next);
   }
 
+  const fingering = $derived(fingerShape(frets));
   const fretRows = $derived(Array.from({ length: fretCount }, (_, i) => i + 1));
   const col = "w-9";
   const row = "h-9";
@@ -120,8 +122,10 @@
           >
             {#if active}
               <span
-                class="size-6 rounded-full bg-primary shadow-sm ring-2 ring-primary/30"
-              ></span>
+                class="flex size-6 items-center justify-center rounded-full bg-primary font-mono text-3xs font-bold text-primary-foreground shadow-sm ring-2 ring-primary/30"
+              >
+                {fingering.fingers[s] || ""}
+              </span>
             {/if}
           </button>
         {/each}

@@ -16,7 +16,9 @@
   import Slider from "@/components/ui/Slider.svelte";
   import ChordLyricsView from "./ChordLyricsView.svelte";
   import ChordDiagram from "./ChordDiagram.svelte";
+  import FingerLegend from "./FingerLegend.svelte";
   import TabView from "./TabView.svelte";
+  import TabFingerGuide from "./TabFingerGuide.svelte";
   import StrummingPreview from "@/components/create/StrummingPreview.svelte";
   import Metronome from "./Metronome.svelte";
 
@@ -195,6 +197,7 @@
           />
         {/each}
       </div>
+      <FingerLegend class="mt-2.5" />
     </div>
   {/if}
 
@@ -241,6 +244,7 @@
             </p>
           {/if}
           <TabView tab={block.columns} {fontSize} />
+          <TabFingerGuide columns={block.columns} class="mt-2" />
         </div>
       {/each}
     </div>

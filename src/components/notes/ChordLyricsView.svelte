@@ -6,18 +6,22 @@
   import Popover from "@/components/ui/Popover.svelte";
   import ChordDiagram from "./ChordDiagram.svelte";
   import TabView from "./TabView.svelte";
+  import TabFingerGuide from "./TabFingerGuide.svelte";
 
   let {
     sheet,
     transpose = 0,
     fontSize = 16,
     tabBlocks = [] as TabBlock[],
+    stringNames,
     class: className = "",
   }: {
     sheet: string;
     transpose?: number;
     fontSize?: number;
     tabBlocks?: TabBlock[];
+    /** String labels for the finger-placement diagrams; defaults to the saved tuning. */
+    stringNames?: readonly string[];
     class?: string;
   } = $props();
 
@@ -48,6 +52,11 @@
         </div>
         {#if block}
           <TabView tab={block.columns} {fontSize} />
+          <TabFingerGuide
+            columns={block.columns}
+            {stringNames}
+            class="mt-2 font-sans"
+          />
         {:else}
           <div
             class="rounded-lg border border-dashed border-border bg-card/40 px-3 py-2 text-sm text-muted-foreground"
