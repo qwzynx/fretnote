@@ -1,7 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Clock, PlusCircle, Sparkles } from "@lucide/svelte";
+  import { push } from "svelte-spa-router";
+  import { Clock, PlusCircle, Sparkles, Upload } from "@lucide/svelte";
+  import { toast } from "svelte-sonner";
   import { listNotes } from "@/lib/db";
+  import { importNote } from "@/lib/backup";
   import type { Note } from "@/lib/types";
   import { getRecentIds } from "@/lib/recent";
   import Button from "@/components/ui/Button.svelte";
@@ -11,6 +14,7 @@
   let notes = $state<Note[]>([]);
   let loading = $state(true);
   let feedQuery = $state("");
+  let importing = $state(false);
 
   onMount(async () => {
     try {
@@ -19,6 +23,21 @@
       loading = false;
     }
   });
+
+  async function handleImportNote() {
+    importing = true;
+    try {
+      const imported = await importNote();
+      if (imported) {
+        toast.success(`Imported "${imported.title}"`);
+        push(`/notes/${imported.id}`);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      importing = false;
+    }
+  }
 
   function scrollToFeed() {
     document.getElementById("feed")?.scrollIntoView({ behavior: "smooth" });
@@ -61,6 +80,16 @@
         <Button size="lg" href="#/create" class="flex-1 sm:flex-none">
           <PlusCircle />
           Create a note
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          disabled={importing}
+          onclick={handleImportNote}
+          class="flex-1 sm:flex-none"
+        >
+          <Upload />
+          {importing ? "Importing…" : "Import note"}
         </Button>
         <Button
           size="lg"

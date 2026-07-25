@@ -132,7 +132,6 @@
   -->
   <div
     class="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/80 bg-background/95 px-4 py-2 backdrop-blur sm:mb-6 sm:py-2.5"
-    data-print-hide
   >
     <div class="flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-x-4">
       {#if note.type === "chords"}

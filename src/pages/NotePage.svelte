@@ -1,11 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
-  import { ArrowLeft, ChevronDown, Copy, Guitar, Heart, ListMusic, MoreHorizontal, Music4, Pencil, Printer, Trash2, X } from "@lucide/svelte";
+  import { ArrowLeft, ChevronDown, Copy, Download, Guitar, Heart, ListMusic, MoreHorizontal, Music4, Pencil, Printer, Trash2, X } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import { getNote, deleteNote, toggleFavorite } from "@/lib/db";
   import { transposeKey } from "@/lib/music/transpose";
-  import { noteToText } from "@/lib/export";
+  import { noteToText, copyTextToClipboard, exportNoteAsPdf } from "@/lib/export";
+  import { exportNote } from "@/lib/backup";
   import AddToSetlistDialog from "@/components/ui/AddToSetlistDialog.svelte";
   import { recordView } from "@/lib/recent";
   import type { Note } from "@/lib/types";
@@ -45,16 +46,37 @@
 
   async function handleCopyText() {
     if (!note) return;
-    await navigator.clipboard.writeText(noteToText(note));
-    toast.success("Copied to clipboard");
     exportOpen = false;
     actionsOpen = false;
+    try {
+      await copyTextToClipboard(noteToText(note));
+      toast.success("Copied to clipboard");
+    } catch {
+      toast.error("Couldn't copy to clipboard");
+    }
   }
 
-  function handlePrint() {
+  async function handleExportPdf() {
+    if (!note) return;
     exportOpen = false;
     actionsOpen = false;
-    setTimeout(() => window.print(), 50);
+    try {
+      await exportNoteAsPdf(note);
+    } catch {
+      toast.error("Couldn't generate PDF");
+    }
+  }
+
+  async function handleExportNoteFile() {
+    if (!note) return;
+    exportOpen = false;
+    actionsOpen = false;
+    try {
+      const saved = await exportNote(note);
+      if (saved) toast.success("Note exported");
+    } catch {
+      toast.error("Couldn't export note");
+    }
   }
 
   async function handleDelete() {
@@ -79,7 +101,7 @@
   </main>
 {:else}
   <main class="mx-auto w-full max-w-3xl px-4 py-4 sm:py-8">
-    <div class="mb-4 flex items-center justify-between gap-2" data-print-hide>
+    <div class="mb-4 flex items-center justify-between gap-2">
       <Button
         variant="ghost"
         size="sm"
@@ -144,11 +166,11 @@
               >
                 <button
                   type="button"
-                  onclick={handlePrint}
+                  onclick={handleExportPdf}
                   class="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
                 >
                   <Printer class="size-3.5" />
-                  Print / Save PDF
+                  Save as PDF
                 </button>
                 <button
                   type="button"
@@ -157,6 +179,14 @@
                 >
                   <Copy class="size-3.5" />
                   Copy as text
+                </button>
+                <button
+                  type="button"
+                  onclick={handleExportNoteFile}
+                  class="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
+                >
+                  <Download class="size-3.5" />
+                  Export note file
                 </button>
               </div>
             {/if}
@@ -235,7 +265,6 @@
       tabindex="-1"
       aria-modal="true"
       aria-label="Note actions"
-      data-print-hide
       class="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm sm:hidden"
       onclick={(e) => { if (e.target === e.currentTarget) actionsOpen = false; }}
       onkeydown={(e) => { if (e.key === "Escape") actionsOpen = false; }}
@@ -279,9 +308,13 @@
           <Copy class="size-5 text-muted-foreground" />
           Copy as text
         </button>
-        <button type="button" class={sheetItem} onclick={handlePrint}>
+        <button type="button" class={sheetItem} onclick={handleExportPdf}>
           <Printer class="size-5 text-muted-foreground" />
-          Print / Save PDF
+          Save as PDF
+        </button>
+        <button type="button" class={sheetItem} onclick={handleExportNoteFile}>
+          <Download class="size-5 text-muted-foreground" />
+          Export note file
         </button>
         <button
           type="button"

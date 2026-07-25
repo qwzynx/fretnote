@@ -22,8 +22,6 @@
   hidden from `md` up where the header nav takes over.
 -->
 <nav
-  data-bottom-nav
-  data-print-hide
   aria-label="Primary"
   class="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:hidden"
 >

@@ -148,6 +148,54 @@ export async function updateNote(id: string, input: NoteInput): Promise<void> {
   );
 }
 
+/**
+ * Inserts a note as-is (preserving its id/slug/createdAt/isFavorite), or
+ * overwrites the existing row with the same id. Used by library import,
+ * where notes arrive with identity already assigned by the exporting device.
+ */
+export async function upsertNote(note: Note): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    `INSERT INTO notes
+       (id, slug, type, title, artist, key, capo, difficulty, tags, created_at, chord_sheet, tab_blocks, chords, strumming_pattern, bpm, is_favorite)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+     ON CONFLICT(id) DO UPDATE SET
+       slug=excluded.slug,
+       type=excluded.type,
+       title=excluded.title,
+       artist=excluded.artist,
+       key=excluded.key,
+       capo=excluded.capo,
+       difficulty=excluded.difficulty,
+       tags=excluded.tags,
+       created_at=excluded.created_at,
+       chord_sheet=excluded.chord_sheet,
+       tab_blocks=excluded.tab_blocks,
+       chords=excluded.chords,
+       strumming_pattern=excluded.strumming_pattern,
+       bpm=excluded.bpm,
+       is_favorite=excluded.is_favorite`,
+    [
+      note.id,
+      note.slug,
+      note.type,
+      note.title,
+      note.artist,
+      note.key,
+      note.capo,
+      note.difficulty,
+      JSON.stringify(note.tags),
+      note.createdAt,
+      note.chordSheet ?? null,
+      note.tabBlocks?.length ? JSON.stringify(note.tabBlocks) : null,
+      JSON.stringify(note.chords),
+      note.strummingPattern?.length ? JSON.stringify(note.strummingPattern) : null,
+      note.bpm ?? null,
+      note.isFavorite ? 1 : 0,
+    ]
+  );
+}
+
 export async function toggleFavorite(id: string, value: boolean): Promise<void> {
   const db = await getDb();
   await db.execute("UPDATE notes SET is_favorite = $1 WHERE id = $2", [

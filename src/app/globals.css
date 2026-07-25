@@ -168,13 +168,3 @@
     }
   }
 }
-
-@media print {
-  [data-print-hide] { display: none !important; }
-  header, footer, nav[data-bottom-nav] { display: none !important; }
-  .sticky { position: static !important; }
-  .h-dvh { height: auto !important; }
-  .overflow-y-auto { overflow: visible !important; }
-  body, main { background: white !important; color: black !important; }
-  a { color: inherit !important; text-decoration: none !important; }
-}
