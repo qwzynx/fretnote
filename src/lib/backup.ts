@@ -51,9 +51,50 @@ function backupFilename(): string {
   return `fretnote-backup-${new Date().toISOString().slice(0, 10)}.fretnote`;
 }
 
+/** Browser stand-in for the native open dialog: a hidden file input.
+ *  The `cancel` event only fires on Chromium 113+; on other browsers
+ *  dismissing the picker without choosing a file just leaves this pending. */
+function pickFileBrowser(): Promise<File | null> {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".fretnote,.json";
+    input.style.position = "fixed";
+    input.style.opacity = "0";
+    document.body.appendChild(input);
+
+    const cleanup = () => document.body.removeChild(input);
+    input.addEventListener("cancel", () => {
+      cleanup();
+      resolve(null);
+    });
+    input.addEventListener("change", () => {
+      cleanup();
+      resolve(input.files?.[0] ?? null);
+    });
+    input.click();
+  });
+}
+
+/** Browser stand-in for the native save dialog: triggers a normal download. */
+function saveTextFileBrowser(filename: string, text: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function readTransferFile(
   dialogName: string
 ): Promise<{ path: string; json: string } | null> {
+  if (!("__TAURI_INTERNALS__" in window)) {
+    const file = await pickFileBrowser();
+    if (!file) return null;
+    return { path: file.name, json: await file.text() };
+  }
+
   const { open } = await import("@tauri-apps/plugin-dialog");
   const { readTextFile } = await import("@tauri-apps/plugin-fs");
 
@@ -98,6 +139,11 @@ export async function exportLibrary(): Promise<boolean> {
   };
 
   const json = JSON.stringify(backup, null, 2);
+
+  if (!("__TAURI_INTERNALS__" in window)) {
+    saveTextFileBrowser(backupFilename(), json);
+    return true;
+  }
 
   const { save } = await import("@tauri-apps/plugin-dialog");
   const { writeTextFile } = await import("@tauri-apps/plugin-fs");
@@ -154,11 +200,17 @@ export async function exportNote(note: Note): Promise<boolean> {
   };
 
   const json = JSON.stringify(backup, null, 2);
+  const filename = `${sanitizeFilename(note.title)}.fretnote`;
+
+  if (!("__TAURI_INTERNALS__" in window)) {
+    saveTextFileBrowser(filename, json);
+    return true;
+  }
 
   const { save } = await import("@tauri-apps/plugin-dialog");
   const { writeTextFile } = await import("@tauri-apps/plugin-fs");
   const path = await save({
-    defaultPath: `${sanitizeFilename(note.title)}.fretnote`,
+    defaultPath: filename,
     filters: [{ name: "Fretnote Note", extensions: ["fretnote", "json"] }],
   });
   if (!path) return false; // user cancelled the dialog

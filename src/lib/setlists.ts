@@ -1,14 +1,5 @@
-import Database from "@tauri-apps/plugin-sql";
+import { getDb } from "@/lib/db-driver";
 import type { Setlist, SetlistWithNotes, Note, NoteType, Difficulty, TabBlock } from "@/lib/types";
-
-let _db: Database | null = null;
-
-async function getDb(): Promise<Database> {
-  if (!_db) {
-    _db = await Database.load("sqlite:fretnote.db");
-  }
-  return _db;
-}
 
 interface SetlistRow {
   id: string;
