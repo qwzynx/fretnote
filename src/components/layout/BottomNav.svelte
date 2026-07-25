@@ -32,19 +32,16 @@
       {@const active = isActive(item.href)}
       <a
         href={`#${item.href}`}
+        aria-label={item.label}
         aria-current={active ? "page" : undefined}
         class={cn(
-          "flex h-11 min-w-0 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors",
+          "flex size-11 shrink-0 items-center justify-center rounded-full transition-colors",
           active
             ? "bg-primary/15 text-primary"
             : "text-muted-foreground active:bg-muted"
         )}
       >
-        <svelte:component this={item.icon} class="size-5 shrink-0" />
-        <!-- Label rides along only on the active tab, so the pill stays narrow. -->
-        {#if active}
-          <span class="truncate">{item.label}</span>
-        {/if}
+        <svelte:component this={item.icon} class="size-5" />
       </a>
     {/each}
 

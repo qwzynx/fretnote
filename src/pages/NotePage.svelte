@@ -8,6 +8,8 @@
   import { noteToText, copyTextToClipboard, exportNoteAsPdf } from "@/lib/export";
   import { exportNote } from "@/lib/backup";
   import AddToSetlistDialog from "@/components/ui/AddToSetlistDialog.svelte";
+  import { historyLayer } from "@/lib/overlay-history.svelte";
+  import { dragDismiss } from "@/lib/actions/drag-dismiss";
   import { recordView } from "@/lib/recent";
   import type { Note } from "@/lib/types";
   import Badge from "@/components/ui/Badge.svelte";
@@ -26,9 +28,19 @@
   let note = $state<Note | null | undefined>(undefined);
   let isFav = $state(false);
   let exportOpen = $state(false);
+  let exportEl: HTMLElement;
   let setlistDialogOpen = $state(false);
   /** Phone-only action sheet standing in for the desktop button row. */
   let actionsOpen = $state(false);
+
+  historyLayer(() => exportOpen, () => (exportOpen = false));
+  const actionsLayer = historyLayer(() => actionsOpen, () => (actionsOpen = false));
+
+  function handleExportOutsideClick(e: MouseEvent) {
+    if (exportOpen && exportEl && !exportEl.contains(e.target as Node)) {
+      exportOpen = false;
+    }
+  }
 
   onMount(async () => {
     if (!params.id) return;
@@ -87,6 +99,8 @@
     push("/");
   }
 </script>
+
+<svelte:window onclick={handleExportOutsideClick} />
 
 {#if note === undefined}
   <main class="mx-auto w-full max-w-3xl px-4 py-8">
@@ -150,7 +164,7 @@
           </Button>
 
           <!-- Export dropdown -->
-          <div class="relative">
+          <div class="relative" bind:this={exportEl}>
             <Button
               variant="outline"
               size="sm"
@@ -259,6 +273,7 @@
   {#if actionsOpen}
     {@const sheetItem =
       "flex w-full items-center gap-3 rounded-lg px-3 py-3.5 text-left text-base active:bg-muted"}
+    {@const noteId = note.id}
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
     <div
       role="dialog"
@@ -270,6 +285,7 @@
       onkeydown={(e) => { if (e.key === "Escape") actionsOpen = false; }}
     >
       <div
+        use:dragDismiss={{ onDismiss: () => (actionsOpen = false) }}
         class="w-full rounded-t-2xl border-t border-border bg-card p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-2xl"
       >
         <div class="mx-auto mb-1 h-1 w-10 rounded-full bg-muted-foreground/30"></div>
@@ -288,22 +304,19 @@
         <button
           type="button"
           class={sheetItem}
-          onclick={() => {
-            actionsOpen = false;
-            setlistDialogOpen = true;
-          }}
+          onclick={() => actionsLayer.dismiss(() => (setlistDialogOpen = true))}
         >
           <ListMusic class="size-5 text-muted-foreground" />
           Add to setlist
         </button>
-        <a
-          href={`#/notes/${note.id}/edit`}
+        <button
+          type="button"
           class={sheetItem}
-          onclick={() => (actionsOpen = false)}
+          onclick={() => actionsLayer.dismiss(() => push(`/notes/${noteId}/edit`))}
         >
           <Pencil class="size-5 text-muted-foreground" />
           Edit note
-        </a>
+        </button>
         <button type="button" class={sheetItem} onclick={handleCopyText}>
           <Copy class="size-5 text-muted-foreground" />
           Copy as text

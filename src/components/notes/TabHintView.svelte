@@ -41,7 +41,7 @@
     fingering={fingering}
     {stringNames}
     label="Recommended hand shape for this tab"
-    class="w-[152px] shrink-0"
+    class="w-[8.5rem] shrink-0 sm:w-[152px]"
   />
 
   <div class="min-w-0 flex-1 space-y-2.5 sm:min-w-[13rem]">
@@ -56,9 +56,9 @@
     </p>
 
     {#if notes.length > 0}
-      <ul class="flex flex-wrap gap-x-5 gap-y-1.5">
+      <ul class="flex min-w-0 flex-wrap gap-x-5 gap-y-1.5">
         {#each notes as note}
-          <li class="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <li class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
             <span
               class="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-primary font-mono text-[0.5625rem] font-bold leading-none text-primary-foreground"
             >

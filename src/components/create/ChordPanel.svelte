@@ -144,11 +144,13 @@
               class="w-auto"
             />
           </div>
-          <FretboardInput
-            {frets}
-            onChange={(f) => (frets = f)}
-            stringNames={tuning.names}
-          />
+          <div class="-mx-1 overflow-x-auto px-1 pb-1">
+            <FretboardInput
+              {frets}
+              onChange={(f) => (frets = f)}
+              stringNames={tuning.names}
+            />
+          </div>
           <button
             type="button"
             onclick={() => (frets = [...EMPTY_FRETS] as Frets)}
