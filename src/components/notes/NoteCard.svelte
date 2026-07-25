@@ -35,7 +35,7 @@
 
 <Card class="group/note gap-0 py-0 hover:ring-primary/40">
   <a href={`#/notes/${note.id}`} class="outline-none">
-    <CardContent class="flex flex-col gap-3 px-4 py-4">
+    <CardContent class="flex flex-col gap-2.5 px-4 py-3.5 sm:gap-3 sm:py-4">
       <div class="flex items-center justify-between">
         <Badge variant="outline" class="gap-1 border-primary/30 text-primary">
           {#if note.type === "tab"}
@@ -78,23 +78,23 @@
   </a>
 
   <CardFooter
-    class="flex items-center justify-between border-t bg-muted/30 px-4 py-2.5"
+    class="flex items-center justify-between gap-2 border-t bg-muted/30 px-4 py-2"
   >
-    <span class="text-xs text-muted-foreground">
+    <span class="shrink-0 text-xs text-muted-foreground">
       {new Date(note.createdAt).toLocaleDateString()}
     </span>
-    <div class="flex items-center gap-2">
-      <span class="text-xs text-muted-foreground">
+    <div class="flex min-w-0 items-center gap-2">
+      <span class="truncate text-xs text-muted-foreground">
         {note.tags.slice(0, 3).map((t) => `#${t}`).join(" ")}
       </span>
       <button
         type="button"
         onclick={handleFavorite}
         aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
-        class="rounded p-0.5 transition-colors hover:text-rose-500"
+        class="-mr-1.5 flex size-8 items-center justify-center rounded-md transition-colors hover:text-rose-500 active:bg-muted sm:-mr-0 sm:size-6"
       >
         <Heart
-          class="size-3.5 {isFav
+          class="size-4 sm:size-3.5 {isFav
             ? 'fill-rose-500 text-rose-500'
             : 'text-muted-foreground'}"
         />

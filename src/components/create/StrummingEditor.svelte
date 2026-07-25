@@ -54,7 +54,7 @@
           type="button"
           onclick={() => (subdivision = sub as 8 | 16)}
           class={cn(
-            "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+            "h-9 rounded-md px-4 text-sm font-medium transition-colors sm:h-auto sm:px-3 sm:py-1",
             subdivision === sub
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
@@ -98,18 +98,18 @@
     Click a box to cycle: ↓ down · ↑ up · faint ↓↑ soft · ✕ mute · · rest
   </p>
 
-  <!-- Grid -->
-  <Card class="flex flex-wrap gap-x-4 gap-y-3 bg-card/60 p-4">
+  <!-- Grid — scrolls sideways on phones rather than splitting a bar across rows. -->
+  <Card class="flex gap-x-4 gap-y-3 overflow-x-auto bg-card/60 p-3 sm:flex-wrap sm:p-4">
     {#each Array.from({ length: bars }, (_, bar) => bar) as bar}
       {@const start = bar * subdivision}
       {@const slots = pattern.slice(start, start + subdivision)}
-      <div class="flex flex-col gap-1">
+      <div class="flex shrink-0 flex-col gap-1">
         <!-- beat labels -->
         <div class="flex gap-1">
           {#each slots as _, i}
             <div
               class={cn(
-                "flex h-4 w-8 items-center justify-center text-kbd",
+                "flex h-4 w-9 items-center justify-center text-kbd sm:w-8",
                 isDownbeat(start + i)
                   ? "font-bold text-foreground"
                   : "text-muted-foreground/50"
@@ -128,7 +128,7 @@
               onclick={() => cycleStroke(start + i)}
               title={info.label}
               class={cn(
-                "flex h-11 w-8 items-center justify-center rounded-md border text-xl font-bold transition-colors",
+                "flex h-12 w-9 items-center justify-center rounded-md border text-xl font-bold transition-colors active:scale-95 sm:h-11 sm:w-8",
                 isDownbeat(start + i)
                   ? "border-border"
                   : "border-border/40 bg-muted/20",

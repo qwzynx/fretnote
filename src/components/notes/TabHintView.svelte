@@ -32,7 +32,7 @@
 
 <div
   class={cn(
-    "inline-flex max-w-full flex-wrap items-start gap-x-6 gap-y-4 rounded-lg border border-border bg-card/40 p-4 font-sans",
+    "flex max-w-full flex-wrap items-start gap-x-6 gap-y-4 rounded-lg border border-border bg-card/40 p-3 font-sans sm:inline-flex sm:p-4",
     className
   )}
 >
@@ -44,7 +44,7 @@
     class="w-[152px] shrink-0"
   />
 
-  <div class="min-w-[13rem] flex-1 space-y-2.5">
+  <div class="min-w-0 flex-1 space-y-2.5 sm:min-w-[13rem]">
     <p class="flex items-center gap-2 text-sm font-medium text-foreground">
       <Hand class="size-4 shrink-0 text-primary" />
       {#if hint.shape}

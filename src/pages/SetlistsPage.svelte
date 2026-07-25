@@ -52,22 +52,24 @@
   }
 </script>
 
-<main class="mx-auto w-full max-w-4xl px-4 py-8">
-  <div class="mb-8 flex items-center justify-between">
+<main class="mx-auto w-full max-w-4xl px-4 py-5 sm:py-8">
+  <div class="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
     <div class="flex items-center gap-3">
       <span
-        class="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25"
+        class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25"
       >
         <ListMusic class="size-5" />
       </span>
       <div>
-        <h1 class="font-heading text-2xl font-semibold tracking-tight">Setlists</h1>
+        <h1 class="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
+          Setlists
+        </h1>
         <p class="text-sm text-muted-foreground">
           Group notes into ordered playlists for performances.
         </p>
       </div>
     </div>
-    <Button onclick={() => (creating = !creating)}>
+    <Button class="w-full sm:w-auto" onclick={() => (creating = !creating)}>
       <Plus />
       New setlist
     </Button>
@@ -85,11 +87,21 @@
           <Label for="sl-desc">Description (optional)</Label>
           <Input id="sl-desc" placeholder="e.g. Acoustic set" bind:value={newDesc} />
         </div>
-        <div class="flex gap-2">
-          <Button disabled={saving || !newTitle.trim()} onclick={handleCreate}>
+        <div class="flex flex-col-reverse gap-2 sm:flex-row">
+          <Button
+            class="w-full sm:w-auto"
+            disabled={saving || !newTitle.trim()}
+            onclick={handleCreate}
+          >
             {saving ? "Creating…" : "Create setlist"}
           </Button>
-          <Button variant="outline" onclick={() => (creating = false)}>Cancel</Button>
+          <Button
+            variant="outline"
+            class="w-full sm:w-auto"
+            onclick={() => (creating = false)}
+          >
+            Cancel
+          </Button>
         </div>
       </div>
     </Card>
@@ -98,7 +110,7 @@
   {#if loading}
     <p class="text-sm text-muted-foreground">Loading…</p>
   {:else if setlists.length === 0}
-    <div class="rounded-xl border border-dashed border-border py-20 text-center">
+    <div class="rounded-xl border border-dashed border-border px-4 py-14 text-center sm:py-20">
       <Music2 class="mx-auto mb-3 size-8 text-muted-foreground" />
       <p class="text-sm text-muted-foreground">No setlists yet.</p>
       <Button size="sm" class="mt-4" onclick={() => (creating = true)}>
@@ -107,7 +119,7 @@
       </Button>
     </div>
   {:else}
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
       {#each setlists as s (s.id)}
         <Card class="group/sl gap-0 py-0 hover:ring-primary/40">
           <a href={`#/setlists/${s.id}`} class="outline-none">
@@ -137,10 +149,10 @@
             <button
               type="button"
               onclick={() => handleDelete(s.id, s.title)}
-              class="rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+              class="-mr-1.5 flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive active:bg-muted sm:-mr-1 sm:size-7"
               aria-label="Delete setlist"
             >
-              <Trash2 class="size-3.5" />
+              <Trash2 class="size-4 sm:size-3.5" />
             </button>
           </CardFooter>
         </Card>

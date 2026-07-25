@@ -4,6 +4,8 @@
   import Router from "svelte-spa-router";
   import SiteHeader from "@/components/layout/SiteHeader.svelte";
   import SiteFooter from "@/components/layout/SiteFooter.svelte";
+  import BottomNav from "@/components/layout/BottomNav.svelte";
+  import { isPhone } from "@/lib/media.svelte";
   import { Toaster } from "svelte-sonner";
   import FeedPage from "@/pages/FeedPage.svelte";
   import CreatePage from "@/pages/CreatePage.svelte";
@@ -67,11 +69,17 @@
 
 <div class="flex h-dvh flex-col overflow-hidden bg-background text-foreground antialiased">
   <SiteHeader />
-  <div class="min-h-0 flex-1 overflow-y-auto">
+  <!-- Padded on phones so content can always scroll clear of the floating nav. -->
+  <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-navbar md:pb-0">
     <Router {routes} />
+    <SiteFooter />
   </div>
-  <SiteFooter />
-  <Toaster theme="dark" richColors />
+  <BottomNav />
+  <Toaster
+    theme="dark"
+    richColors
+    position={isPhone.current ? "top-center" : "bottom-right"}
+  />
   <SearchPalette />
   <KeyboardShortcutsHelp open={shortcutsOpen} onclose={() => (shortcutsOpen = false)} />
 </div>

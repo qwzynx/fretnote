@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
-  import { ArrowLeft, ChevronDown, Copy, Guitar, Heart, ListMusic, Music4, Pencil, Printer, Trash2 } from "@lucide/svelte";
+  import { ArrowLeft, ChevronDown, Copy, Guitar, Heart, ListMusic, MoreHorizontal, Music4, Pencil, Printer, Trash2, X } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import { getNote, deleteNote, toggleFavorite } from "@/lib/db";
   import { transposeKey } from "@/lib/music/transpose";
@@ -26,6 +26,8 @@
   let isFav = $state(false);
   let exportOpen = $state(false);
   let setlistDialogOpen = $state(false);
+  /** Phone-only action sheet standing in for the desktop button row. */
+  let actionsOpen = $state(false);
 
   onMount(async () => {
     if (!params.id) return;
@@ -46,15 +48,18 @@
     await navigator.clipboard.writeText(noteToText(note));
     toast.success("Copied to clipboard");
     exportOpen = false;
+    actionsOpen = false;
   }
 
   function handlePrint() {
     exportOpen = false;
+    actionsOpen = false;
     setTimeout(() => window.print(), 50);
   }
 
   async function handleDelete() {
     if (!note) return;
+    actionsOpen = false;
     if (!confirm(`Delete "${note.title}"? This cannot be undone.`)) return;
     await deleteNote(note.id);
     push("/");
@@ -73,17 +78,20 @@
     </Button>
   </main>
 {:else}
-  <main class="mx-auto w-full max-w-3xl px-4 py-8">
-    <div class="mb-4 flex items-center justify-between" data-print-hide>
+  <main class="mx-auto w-full max-w-3xl px-4 py-4 sm:py-8">
+    <div class="mb-4 flex items-center justify-between gap-2" data-print-hide>
       <Button
         variant="ghost"
         size="sm"
         class="-ml-2 text-muted-foreground"
         href="#/"
+        aria-label="Back to notes"
       >
         <ArrowLeft />
-        Back to notes
+        <span class="hidden sm:inline">Back to notes</span>
+        <span class="sm:hidden">Notes</span>
       </Button>
+
       <div class="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -97,67 +105,88 @@
               : 'text-muted-foreground'}"
           />
         </Button>
+
+        <!-- Phones: one overflow button opening a bottom action sheet. -->
         <Button
           variant="outline"
-          size="sm"
-          onclick={() => (setlistDialogOpen = true)}
+          size="icon-sm"
+          class="sm:hidden"
+          onclick={() => (actionsOpen = true)}
+          aria-label="More actions"
         >
-          <ListMusic />
-          Add to setlist
+          <MoreHorizontal class="size-4" />
         </Button>
 
-        <!-- Export dropdown -->
-        <div class="relative">
+        <div class="hidden items-center gap-2 sm:flex">
           <Button
             variant="outline"
             size="sm"
-            onclick={() => (exportOpen = !exportOpen)}
+            onclick={() => (setlistDialogOpen = true)}
           >
-            <Printer />
-            Export
-            <ChevronDown class="size-3" />
+            <ListMusic />
+            Add to setlist
           </Button>
-          {#if exportOpen}
-            <div
-              class="absolute top-full right-0 z-50 mt-1 min-w-36 overflow-hidden rounded-lg border border-border bg-popover shadow-md"
+
+          <!-- Export dropdown -->
+          <div class="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onclick={() => (exportOpen = !exportOpen)}
             >
-              <button
-                type="button"
-                onclick={handlePrint}
-                class="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
+              <Printer />
+              Export
+              <ChevronDown class="size-3" />
+            </Button>
+            {#if exportOpen}
+              <div
+                class="absolute top-full right-0 z-50 mt-1 min-w-36 overflow-hidden rounded-lg border border-border bg-popover shadow-md"
               >
-                <Printer class="size-3.5" />
-                Print / Save PDF
-              </button>
-              <button
-                type="button"
-                onclick={handleCopyText}
-                class="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
-              >
-                <Copy class="size-3.5" />
-                Copy as text
-              </button>
-            </div>
-          {/if}
+                <button
+                  type="button"
+                  onclick={handlePrint}
+                  class="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
+                >
+                  <Printer class="size-3.5" />
+                  Print / Save PDF
+                </button>
+                <button
+                  type="button"
+                  onclick={handleCopyText}
+                  class="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
+                >
+                  <Copy class="size-3.5" />
+                  Copy as text
+                </button>
+              </div>
+            {/if}
+          </div>
+          <Button variant="outline" size="sm" href={`#/notes/${note.id}/edit`}>
+            <Pencil />
+            Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            class="text-destructive hover:bg-destructive/10"
+            onclick={handleDelete}
+          >
+            <Trash2 />
+            Delete
+          </Button>
         </div>
-        <Button variant="outline" size="sm" href={`#/notes/${note.id}/edit`}>
-          <Pencil />
-          Edit
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          class="text-destructive hover:bg-destructive/10"
-          onclick={handleDelete}
-        >
-          <Trash2 />
-          Delete
-        </Button>
       </div>
     </div>
 
-    <header class="mb-6">
-      <div class="mb-2 flex flex-wrap items-center gap-2">
+    <header class="mb-5 sm:mb-6">
+      <h1 class="font-heading text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
+        {note.title}
+      </h1>
+      <p class="mt-0.5 text-base text-muted-foreground sm:mt-1 sm:text-lg">
+        {note.artist}
+      </p>
+
+      <div class="mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
         <Badge variant="outline" class="gap-1 border-primary/30 text-primary">
           {#if note.type === "tab"}
             <Guitar class="size-3" />
@@ -178,13 +207,8 @@
         </span>
       </div>
 
-      <h1 class="font-heading text-3xl font-semibold tracking-tight">
-        {note.title}
-      </h1>
-      <p class="mt-1 text-lg text-muted-foreground">{note.artist}</p>
-
       {#if note.tags.length > 0}
-        <div class="mt-4 flex flex-wrap gap-1.5">
+        <div class="mt-3 flex flex-wrap gap-1.5 sm:mt-4">
           {#each note.tags as t}
             <span
               class="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
@@ -200,6 +224,76 @@
 
     <NoteReader {note} />
   </main>
+
+  <!-- ══ Phone action sheet ══════════════════════════════════════ -->
+  {#if actionsOpen}
+    {@const sheetItem =
+      "flex w-full items-center gap-3 rounded-lg px-3 py-3.5 text-left text-base active:bg-muted"}
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      aria-label="Note actions"
+      data-print-hide
+      class="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm sm:hidden"
+      onclick={(e) => { if (e.target === e.currentTarget) actionsOpen = false; }}
+      onkeydown={(e) => { if (e.key === "Escape") actionsOpen = false; }}
+    >
+      <div
+        class="w-full rounded-t-2xl border-t border-border bg-card p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-2xl"
+      >
+        <div class="mx-auto mb-1 h-1 w-10 rounded-full bg-muted-foreground/30"></div>
+        <div class="flex items-center justify-between px-3 py-2">
+          <p class="truncate font-medium">{note.title}</p>
+          <button
+            type="button"
+            onclick={() => (actionsOpen = false)}
+            aria-label="Close"
+            class="rounded-full p-1.5 text-muted-foreground active:bg-muted"
+          >
+            <X class="size-5" />
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class={sheetItem}
+          onclick={() => {
+            actionsOpen = false;
+            setlistDialogOpen = true;
+          }}
+        >
+          <ListMusic class="size-5 text-muted-foreground" />
+          Add to setlist
+        </button>
+        <a
+          href={`#/notes/${note.id}/edit`}
+          class={sheetItem}
+          onclick={() => (actionsOpen = false)}
+        >
+          <Pencil class="size-5 text-muted-foreground" />
+          Edit note
+        </a>
+        <button type="button" class={sheetItem} onclick={handleCopyText}>
+          <Copy class="size-5 text-muted-foreground" />
+          Copy as text
+        </button>
+        <button type="button" class={sheetItem} onclick={handlePrint}>
+          <Printer class="size-5 text-muted-foreground" />
+          Print / Save PDF
+        </button>
+        <button
+          type="button"
+          class="{sheetItem} text-destructive"
+          onclick={handleDelete}
+        >
+          <Trash2 class="size-5" />
+          Delete note
+        </button>
+      </div>
+    </div>
+  {/if}
 
   {#if note}
     <AddToSetlistDialog

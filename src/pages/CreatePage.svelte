@@ -5,10 +5,10 @@
   const editId = $derived(params?.id);
 </script>
 
-<main class="w-full py-8 lg:flex lg:h-full lg:flex-col lg:py-0">
+<main class="w-full py-4 sm:py-8 lg:flex lg:h-full lg:flex-col lg:py-0">
   <!-- Title stays centered to the max-w-6xl grid -->
   <div class="mx-auto w-full max-w-6xl px-4 lg:shrink-0">
-    <h1 class="mb-6 font-heading text-2xl font-semibold lg:mb-4 lg:pt-6">
+    <h1 class="mb-4 font-heading text-xl font-semibold sm:mb-6 sm:text-2xl lg:mb-4 lg:pt-6">
       {editId ? "Edit note" : "New note"}
     </h1>
   </div>

@@ -2,7 +2,8 @@
   import { Guitar } from "@lucide/svelte";
 </script>
 
-<footer class="border-t border-border/80 bg-background">
+<!-- Phones get the bottom pill nav instead; this footer would only steal room. -->
+<footer class="hidden border-t border-border/80 bg-background md:block">
   <div
     class="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between"
   >

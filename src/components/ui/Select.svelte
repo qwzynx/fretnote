@@ -37,8 +37,8 @@
     {value}
     onchange={handleChange}
     class={cn(
-      "appearance-none rounded-lg border border-input bg-transparent pr-7 pl-2.5 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring/50 focus:border-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30 dark:hover:bg-input/50",
-      size === "sm" ? "h-7 text-2xs" : "h-8",
+      "appearance-none rounded-lg border border-input bg-transparent pr-8 pl-3 text-base outline-none transition-colors focus:ring-2 focus:ring-ring/50 focus:border-ring disabled:cursor-not-allowed disabled:opacity-50 sm:pr-7 sm:pl-2.5 sm:text-sm dark:bg-input/30 dark:hover:bg-input/50",
+      size === "sm" ? "h-9 sm:h-7 sm:text-2xs" : "h-10 sm:h-8",
       className
     )}
     {...rest}
@@ -51,6 +51,6 @@
     {/each}
   </select>
   <ChevronDown
-    class="pointer-events-none absolute right-1.5 size-4 text-muted-foreground"
+    class="pointer-events-none absolute right-2 size-4 text-muted-foreground sm:right-1.5"
   />
 </div>

@@ -64,7 +64,7 @@
 </script>
 
 {#if notes.length === 0}
-  <div class="rounded-xl border border-dashed border-border py-20 text-center">
+  <div class="rounded-xl border border-dashed border-border px-4 py-14 text-center sm:py-20">
     <p class="text-sm text-muted-foreground">No notes yet. Create your first one!</p>
     <Button size="sm" class="mt-4" href="#/create">
       <PlusCircle />
@@ -80,22 +80,26 @@
         />
         <Input
           bind:value={_query}
-          placeholder="Search songs, artists, tags or a chord…"
-          class="h-10 pl-9"
+          type="search"
+          placeholder="Search songs, artists, tags…"
+          class="h-11 pl-9 sm:h-10"
         />
       </div>
 
+      <!-- Filters scroll sideways on phones instead of wrapping into rows. -->
       <div class="flex items-center gap-2">
-        <div class="flex rounded-lg border border-border p-0.5">
+        <div
+          class="no-scrollbar -mx-4 flex flex-1 gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-none sm:gap-0 sm:rounded-lg sm:border sm:border-border sm:px-0 sm:p-0.5"
+        >
           {#each FILTERS as f}
             <button
               type="button"
               onclick={() => (filter = f.value)}
               class={cn(
-                "inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm transition-colors",
+                "inline-flex h-9 shrink-0 items-center gap-1 rounded-full border px-4 text-sm transition-colors sm:h-auto sm:rounded-md sm:border-transparent sm:px-3 sm:py-1.5",
                 filter === f.value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "border-transparent bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:text-foreground"
               )}
             >
               {#if f.value === "favorites"}
@@ -109,15 +113,18 @@
         <Select
           bind:value={sort}
           items={SORT_ITEMS}
-          class="h-10"
+          class="hidden h-10 sm:inline-flex"
         />
       </div>
     </div>
 
-    <p class="mb-4 mt-4 text-sm text-muted-foreground">
-      {results().length}
-      {results().length === 1 ? "note" : "notes"}
-    </p>
+    <div class="mb-4 mt-3 flex items-center justify-between gap-3 sm:mt-4">
+      <p class="text-sm text-muted-foreground">
+        {results().length}
+        {results().length === 1 ? "note" : "notes"}
+      </p>
+      <Select bind:value={sort} items={SORT_ITEMS} size="sm" class="sm:hidden" />
+    </div>
 
     {#if results().length === 0}
       <div class="rounded-xl border border-dashed border-border py-16 text-center">
@@ -135,7 +142,7 @@
         </Button>
       </div>
     {:else}
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         {#each results() as note (note.id)}
           <NoteCard {note} {onToggleFavorite} />
         {/each}

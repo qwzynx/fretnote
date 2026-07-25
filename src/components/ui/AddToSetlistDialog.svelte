@@ -79,11 +79,14 @@
     tabindex="-1"
     aria-modal="true"
     aria-label="Add to setlist"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
     onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}
     onkeydown={handleKeydown}
   >
-    <div class="w-full max-w-sm overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+    <!-- Bottom sheet on phones, centred dialog on larger screens. -->
+    <div
+      class="w-full overflow-hidden rounded-t-2xl border-t border-border bg-card pb-[env(safe-area-inset-bottom,0px)] shadow-2xl sm:max-w-sm sm:rounded-xl sm:border sm:pb-0"
+    >
       <div class="flex items-center justify-between border-b border-border px-4 py-3">
         <div class="flex items-center gap-2 font-medium">
           <ListMusic class="size-4 text-primary" />
@@ -92,14 +95,14 @@
         <button
           type="button"
           onclick={onclose}
-          class="rounded p-0.5 text-muted-foreground hover:text-foreground"
+          class="-mr-1.5 flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground active:bg-muted sm:-mr-0 sm:size-6"
           aria-label="Close"
         >
-          <X class="size-4" />
+          <X class="size-5 sm:size-4" />
         </button>
       </div>
 
-      <div class="max-h-64 overflow-y-auto py-1">
+      <div class="max-h-[45vh] overflow-y-auto overscroll-contain py-1 sm:max-h-64">
         {#if loading}
           <p class="px-4 py-4 text-sm text-muted-foreground">Loading…</p>
         {:else if setlists.length === 0}
@@ -110,10 +113,10 @@
             <button
               type="button"
               onclick={() => toggle(s.id)}
-              class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-muted"
+              class="flex w-full items-center gap-3 px-4 py-3.5 text-left text-base hover:bg-muted active:bg-muted sm:py-2.5 sm:text-sm"
             >
               <span
-                class="flex size-5 items-center justify-center rounded border {inList
+                class="flex size-5 shrink-0 items-center justify-center rounded border {inList
                   ? 'border-primary bg-primary text-primary-foreground'
                   : 'border-border'}"
               >
@@ -136,20 +139,20 @@
               bind:value={newTitle}
               placeholder="Setlist name…"
               onkeydown={(e) => e.key === "Enter" && handleCreate()}
-              class="flex-1 rounded-md border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/50"
+              class="h-10 min-w-0 flex-1 rounded-md border border-input bg-transparent px-2.5 text-base outline-none focus:border-ring focus:ring-2 focus:ring-ring/50 sm:h-8 sm:text-sm"
             />
             <button
               type="button"
               onclick={handleCreate}
               disabled={!newTitle.trim()}
-              class="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+              class="h-10 shrink-0 rounded-md bg-primary px-3 text-sm text-primary-foreground disabled:opacity-50 sm:h-8"
             >
               Create
             </button>
             <button
               type="button"
               onclick={() => (addingNew = false)}
-              class="rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+              class="h-10 shrink-0 rounded-md px-2 text-sm text-muted-foreground hover:text-foreground sm:h-8"
             >
               Cancel
             </button>
@@ -158,7 +161,7 @@
           <button
             type="button"
             onclick={() => (addingNew = true)}
-            class="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            class="flex h-10 items-center gap-2 rounded-md px-1 text-sm text-muted-foreground hover:text-foreground sm:h-auto"
           >
             <Plus class="size-4" />
             New setlist

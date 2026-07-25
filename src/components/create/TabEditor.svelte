@@ -6,9 +6,11 @@
   import Input from "@/components/ui/Input.svelte";
   import Card from "@/components/ui/Card.svelte";
   import TabFingeringPanel from "./TabFingeringPanel.svelte";
+  import { isPhone } from "@/lib/media.svelte";
 
   const DISPLAY_ORDER = [5, 4, 3, 2, 1, 0] as const;
-  const COL_W = 32;
+  /** Must track the rendered cell width below — phones get roomier cells. */
+  const COL_W = $derived(isPhone.current ? 40 : 32);
   const GUTTER_W = 48;
 
   const emptyColumn = (): TabColumn => ["", "", "", "", "", ""];
@@ -141,9 +143,9 @@
   }
 </script>
 
-<Card class="space-y-4 bg-card/40 p-4">
-  <!-- Header -->
-  <div class="flex items-center gap-2">
+<Card class="space-y-4 bg-card/40 p-3 sm:p-4">
+  <!-- Header: name takes its own row on phones so the actions stay reachable. -->
+  <div class="flex flex-wrap items-center gap-2">
     <Input
       value={block.label}
       oninput={(e: Event) =>
@@ -152,7 +154,7 @@
           label: (e.target as HTMLInputElement).value,
         })}
       placeholder="Section, e.g. Intro"
-      class="h-8 max-w-56"
+      class="w-full sm:h-8 sm:w-auto sm:max-w-56"
     />
     <Button
       variant="outline"
@@ -179,7 +181,7 @@
   <!-- Grid -->
   <div
     use:measureWidth
-    class="overflow-x-auto rounded-lg border border-border bg-card/60 p-4"
+    class="overflow-x-auto rounded-lg border border-border bg-card/60 p-3 sm:p-4"
   >
     <div class="flex flex-col gap-4">
       {#each chunks() as colIdxs, ci}
@@ -208,7 +210,7 @@
                     onfocus={(e) => (e.target as HTMLInputElement).select()}
                     inputmode="numeric"
                     placeholder="–"
-                    class="h-7 w-6 rounded bg-transparent text-center text-foreground caret-primary outline-none placeholder:text-muted-foreground/30 focus:bg-primary/15 focus:text-primary"
+                    class="h-9 w-8 rounded bg-transparent text-center text-base text-foreground caret-primary outline-none placeholder:text-muted-foreground/30 focus:bg-primary/15 focus:text-primary sm:h-7 sm:w-6 sm:text-sm"
                   />
                 </div>
               {/each}

@@ -26,8 +26,9 @@
 
   const fingering = $derived(fingerShape(frets));
   const fretRows = $derived(Array.from({ length: fretCount }, (_, i) => i + 1));
-  const col = "w-9";
-  const row = "h-9";
+  // Roomier cells on phones — this grid is tapped, not clicked.
+  const col = "w-11 sm:w-9";
+  const row = "h-11 sm:h-9";
 </script>
 
 <div class="inline-flex select-none flex-col items-center gap-0">
@@ -61,7 +62,7 @@
               ? "Open — click to mute"
               : "Click to mute"}
           class={cn(
-            "flex size-5 items-center justify-center rounded-full border text-3xs font-bold transition-colors",
+            "flex size-7 items-center justify-center rounded-full border text-3xs font-bold transition-colors sm:size-5",
             isMuted
               ? "border-muted-foreground/60 text-muted-foreground"
               : isOpen

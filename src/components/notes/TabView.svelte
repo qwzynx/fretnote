@@ -69,7 +69,7 @@
 <div
   use:measureWidth
   class={cn(
-    "overflow-x-auto rounded-lg border border-border bg-card/60 p-4",
+    "overflow-x-auto rounded-lg border border-border bg-card/60 p-3 sm:p-4",
     className
   )}
 >

@@ -43,15 +43,17 @@
   }
 </script>
 
-<main class="mx-auto w-full max-w-2xl px-4 py-8">
-  <div class="mb-8 flex items-center gap-3">
+<main class="mx-auto w-full max-w-2xl px-4 py-5 sm:py-8">
+  <div class="mb-6 flex items-center gap-3 sm:mb-8">
     <span
-      class="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25"
+      class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25"
     >
       <Settings2 class="size-5" />
     </span>
     <div>
-      <h1 class="font-heading text-2xl font-semibold tracking-tight">Settings</h1>
+      <h1 class="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
+        Settings
+      </h1>
       <p class="text-sm text-muted-foreground">
         Defaults applied when creating new notes or opening the reader.
       </p>
@@ -63,7 +65,7 @@
     <section class="space-y-4">
       <h2 class="font-heading text-base font-semibold">New note defaults</h2>
 
-      <div class="grid gap-4 sm:grid-cols-3">
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div class="space-y-1.5">
           <Label>Default key</Label>
           <Select bind:value={s.defaultKey} items={KEY_ITEMS} class="w-full" />
@@ -77,11 +79,11 @@
             min={0}
             max={12}
             bind:value={s.defaultCapo}
-            class="flex h-8 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors [appearance:textfield] focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 dark:bg-input/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            class="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors [appearance:textfield] focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:h-8 sm:text-sm dark:bg-input/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
 
-        <div class="space-y-1.5">
+        <div class="col-span-2 space-y-1.5 sm:col-span-1">
           <Label>Default difficulty</Label>
           <Select
             bind:value={s.defaultDifficulty}
@@ -93,7 +95,7 @@
 
       <div class="space-y-1.5">
         <Label>Default tuning</Label>
-        <Select bind:value={s.defaultTuning} items={TUNING_ITEMS} class="w-full max-w-xs" />
+        <Select bind:value={s.defaultTuning} items={TUNING_ITEMS} class="w-full sm:max-w-xs" />
       </div>
     </section>
 
@@ -140,9 +142,11 @@
 
     <Separator />
 
-    <div class="flex gap-3">
-      <Button onclick={handleSave}>Save settings</Button>
-      <Button variant="outline" onclick={handleReset}>Reset to defaults</Button>
+    <div class="flex flex-col gap-3 sm:flex-row">
+      <Button class="w-full sm:w-auto" onclick={handleSave}>Save settings</Button>
+      <Button variant="outline" class="w-full sm:w-auto" onclick={handleReset}>
+        Reset to defaults
+      </Button>
     </div>
   </div>
 </main>
