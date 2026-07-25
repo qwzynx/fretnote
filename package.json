@@ -8,6 +8,7 @@
     "dev": "cross-env GDK_BACKEND=x11 WEBKIT_DISABLE_DMABUF_RENDERER=1 tauri dev",
     "build": "tauri build",
     "vite:dev": "vite",
+    "vite:dev:web": "vite --port 1421",
     "vite:build": "vite build",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint"
