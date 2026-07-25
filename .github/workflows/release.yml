@@ -71,6 +71,8 @@ jobs:
           args: ${{ matrix.args }}
 
   release-android:
+    # The desktop jobs create the draft release; this job only adds the APK to it.
+    needs: release-desktop
     permissions:
       contents: write
     runs-on: ubuntu-22.04
@@ -117,12 +119,13 @@ jobs:
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
 
+      # Uploads the asset only. Editing the release itself (name/draft/body) is
+      # left to the desktop jobs -- a PATCH from here is rejected with
+      # "Resource not accessible by integration" even with contents: write.
       - name: Upload APK to release
-        uses: softprops/action-gh-release@v3
-        with:
-          draft: true
-          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
-          name: Fretnote ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" \
+            src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk \
+            --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
