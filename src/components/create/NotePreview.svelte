@@ -5,9 +5,12 @@
   import { extractTabRefs } from "@/lib/music/parse";
   import Button from "@/components/ui/Button.svelte";
   import Badge from "@/components/ui/Badge.svelte";
+  import Card from "@/components/ui/Card.svelte";
   import ChordLyricsView from "@/components/notes/ChordLyricsView.svelte";
   import ChordDiagram from "@/components/notes/ChordDiagram.svelte";
   import TabView from "@/components/notes/TabView.svelte";
+  import TabHintView from "@/components/notes/TabHintView.svelte";
+  import FingerLegend from "@/components/notes/FingerLegend.svelte";
   import StrummingPreview from "./StrummingPreview.svelte";
 
   const MIN_FONT = 13;
@@ -33,6 +36,7 @@
     chords,
     sheet,
     tabBlocks,
+    stringNames,
   }: {
     title: string;
     artist: string;
@@ -44,6 +48,8 @@
     chords: string[];
     sheet: string;
     tabBlocks: TabBlock[];
+    /** String labels for the finger-placement diagrams. */
+    stringNames?: readonly string[];
   } = $props();
 
   let fontSize = $state(16);
@@ -70,9 +76,7 @@
   );
 </script>
 
-<div
-  class="flex flex-col overflow-hidden rounded-xl border border-border bg-card/60 shadow-sm"
->
+<Card class="flex flex-col overflow-hidden bg-card/60">
   <!-- Toolbar -->
   <div
     class="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/30 px-3 py-2"
@@ -156,9 +160,10 @@
           </p>
           <div class="flex flex-wrap gap-3">
             {#each chords as c}
-              <ChordDiagram name={c} class="w-16" />
+              <ChordDiagram name={c} class="w-20" />
             {/each}
           </div>
+          <FingerLegend class="mt-2" />
         </section>
       {/if}
 
@@ -171,7 +176,7 @@
             Song
           </p>
           <div class="overflow-x-auto">
-            <ChordLyricsView {sheet} {fontSize} {tabBlocks} />
+            <ChordLyricsView {sheet} {fontSize} {tabBlocks} {stringNames} />
           </div>
         </section>
       {/if}
@@ -192,6 +197,9 @@
                     {block.label}
                   </p>
                 {/if}
+                {#if block.hint}
+                  <TabHintView hint={block.hint} {stringNames} class="mb-3" />
+                {/if}
                 <TabView tab={block.columns} {fontSize} />
               </div>
             {/each}
@@ -211,4 +219,4 @@
         </div>
       {/if}
     </div>
-  </div>
+  </Card>

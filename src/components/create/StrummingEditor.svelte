@@ -8,6 +8,7 @@
     type StrokeType,
   } from "@/lib/strumming";
   import Button from "@/components/ui/Button.svelte";
+  import Card from "@/components/ui/Card.svelte";
   import { cn } from "@/lib/utils";
 
   let {
@@ -98,9 +99,7 @@
   </p>
 
   <!-- Grid -->
-  <div
-    class="flex flex-wrap gap-x-4 gap-y-3 rounded-xl border border-border bg-card/60 p-4"
-  >
+  <Card class="flex flex-wrap gap-x-4 gap-y-3 bg-card/60 p-4">
     {#each Array.from({ length: bars }, (_, bar) => bar) as bar}
       {@const start = bar * subdivision}
       {@const slots = pattern.slice(start, start + subdivision)}
@@ -110,7 +109,7 @@
           {#each slots as _, i}
             <div
               class={cn(
-                "flex h-4 w-8 items-center justify-center text-[10px]",
+                "flex h-4 w-8 items-center justify-center text-kbd",
                 isDownbeat(start + i)
                   ? "font-bold text-foreground"
                   : "text-muted-foreground/50"
@@ -143,5 +142,5 @@
         </div>
       </div>
     {/each}
-  </div>
+  </Card>
 </div>

@@ -22,7 +22,7 @@
         size: {
           default: "h-8 gap-1.5 px-2.5",
           xs: "h-6 gap-1 rounded-md px-2 text-xs [&_svg:not([class*='size-'])]:size-3",
-          sm: "h-7 gap-1 rounded-md px-2.5 text-[0.8rem] [&_svg:not([class*='size-'])]:size-3.5",
+          sm: "h-7 gap-1 rounded-md px-2.5 text-2xs [&_svg:not([class*='size-'])]:size-3.5",
           lg: "h-9 gap-1.5 px-2.5",
           icon: "size-8",
           "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",

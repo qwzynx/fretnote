@@ -11,10 +11,12 @@
   import { TUNINGS, DEFAULT_TUNING } from "@/lib/music/tunings";
   import { getChordShape } from "@/lib/music/chords";
   import ChordDiagram from "@/components/notes/ChordDiagram.svelte";
+  import FingerLegend from "@/components/notes/FingerLegend.svelte";
   import FretboardInput, { type Frets } from "./FretboardInput.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Input from "@/components/ui/Input.svelte";
   import Select from "@/components/ui/Select.svelte";
+  import Card from "@/components/ui/Card.svelte";
   import { cn } from "@/lib/utils";
 
   const EMPTY_FRETS: Frets = [-1, -1, -1, -1, -1, -1];
@@ -55,7 +57,7 @@
   }
 </script>
 
-<div class="rounded-xl border border-border bg-muted/20">
+<Card class="bg-muted/20">
   <!-- Header -->
   <div
     class="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3"
@@ -163,6 +165,7 @@
     <div class="flex min-w-[8rem] flex-col items-center gap-2.5">
       {#if active}
         <ChordDiagram name={active} class="w-24" />
+        <FingerLegend class="justify-center" />
         <div class="flex w-full flex-col gap-1.5">
           {#if onInsert}
             <Button size="sm" onclick={() => onInsert!(active)}>
@@ -193,4 +196,4 @@
       {/if}
     </div>
   </div>
-</div>
+</Card>

@@ -38,7 +38,7 @@
     onchange={handleChange}
     class={cn(
       "appearance-none rounded-lg border border-input bg-transparent pr-7 pl-2.5 text-sm outline-none transition-colors focus:ring-2 focus:ring-ring/50 focus:border-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30 dark:hover:bg-input/50",
-      size === "sm" ? "h-7 text-[0.8rem]" : "h-8",
+      size === "sm" ? "h-7 text-2xs" : "h-8",
       className
     )}
     {...rest}

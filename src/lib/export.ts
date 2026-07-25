@@ -1,4 +1,5 @@
 import type { Note } from "@/lib/types";
+import { TAB_STRING_LABELS } from "@/lib/types";
 
 export function noteToText(note: Note): string {
   const lines: string[] = [];
@@ -21,10 +22,19 @@ export function noteToText(note: Note): string {
   if (note.tabBlocks?.length) {
     for (const block of note.tabBlocks) {
       if (block.label) lines.push(`\n── ${block.label} ──`);
-      const strings = ["e", "B", "G", "D", "A", "E"];
-      for (let s = 0; s < 6; s++) {
-        const row = strings[s] + "|" + block.columns.map((col) => col[s] || "-").join("-") + "|";
-        lines.push(row);
+      // Columns are stored low-E first, but a tab reads high-e on the top line.
+      TAB_STRING_LABELS.forEach((label, row) => {
+        const string = 5 - row;
+        const frets = block.columns.map((col) => col[string] || "-").join("-");
+        lines.push(`${label}|${frets}|`);
+      });
+      if (block.hint) {
+        const shape = block.hint.shape ? `${block.hint.shape} shape` : "hand shape";
+        const grip = block.hint.frets
+          .map((f, s) => `${TAB_STRING_LABELS[5 - s]}${f < 0 ? "x" : f}`)
+          .join(" ");
+        lines.push(`Fingering: hold a ${shape} — ${grip}`);
+        if (block.hint.note) lines.push(`  ${block.hint.note}`);
       }
     }
   }

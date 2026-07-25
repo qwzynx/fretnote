@@ -74,7 +74,7 @@
   </div>
 
   {#if creating}
-    <div class="mb-6 rounded-xl border border-border bg-card p-5 shadow-sm">
+    <Card class="mb-6 p-5">
       <h2 class="mb-4 font-heading text-base font-semibold">New setlist</h2>
       <div class="space-y-3">
         <div class="space-y-1.5">
@@ -92,7 +92,7 @@
           <Button variant="outline" onclick={() => (creating = false)}>Cancel</Button>
         </div>
       </div>
-    </div>
+    </Card>
   {/if}
 
   {#if loading}
