@@ -4,6 +4,7 @@
   import type { Tuning } from "@/lib/music/tunings";
   import Button from "@/components/ui/Button.svelte";
   import Input from "@/components/ui/Input.svelte";
+  import Card from "@/components/ui/Card.svelte";
 
   const DISPLAY_ORDER = [5, 4, 3, 2, 1, 0] as const;
   const COL_W = 32;
@@ -139,7 +140,7 @@
   }
 </script>
 
-<div class="space-y-3 rounded-xl border border-border bg-card/40 p-3">
+<Card class="space-y-3 bg-card/40 p-3">
   <!-- Header -->
   <div class="flex items-center gap-2">
     <Input
@@ -244,4 +245,4 @@
       Clear
     </Button>
   </div>
-</div>
+</Card>

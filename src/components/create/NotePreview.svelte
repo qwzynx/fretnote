@@ -5,6 +5,7 @@
   import { extractTabRefs } from "@/lib/music/parse";
   import Button from "@/components/ui/Button.svelte";
   import Badge from "@/components/ui/Badge.svelte";
+  import Card from "@/components/ui/Card.svelte";
   import ChordLyricsView from "@/components/notes/ChordLyricsView.svelte";
   import ChordDiagram from "@/components/notes/ChordDiagram.svelte";
   import TabView from "@/components/notes/TabView.svelte";
@@ -70,9 +71,7 @@
   );
 </script>
 
-<div
-  class="flex flex-col overflow-hidden rounded-xl border border-border bg-card/60 shadow-sm"
->
+<Card class="flex flex-col overflow-hidden bg-card/60">
   <!-- Toolbar -->
   <div
     class="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/30 px-3 py-2"
@@ -211,4 +210,4 @@
         </div>
       {/if}
     </div>
-  </div>
+  </Card>

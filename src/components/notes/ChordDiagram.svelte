@@ -41,8 +41,7 @@
       x={W / 2}
       y={14}
       text-anchor="middle"
-      class="fill-foreground"
-      style="font-size: 15px; font-weight: 600"
+      class="fill-foreground chord-diagram-title"
     >
       {name}
     </text>
@@ -61,8 +60,7 @@
         x={padX - 4}
         y={padTop + fretGap / 2 + 3}
         text-anchor="end"
-        class="fill-muted-foreground"
-        style="font-size: 9px"
+        class="fill-muted-foreground chord-diagram-basefret"
       >
         {baseFret}fr
       </text>
@@ -112,8 +110,7 @@
             x={x(s)}
             y={padTop - 6}
             text-anchor="middle"
-            class="fill-muted-foreground"
-            style="font-size: 10px"
+            class="fill-muted-foreground chord-diagram-mute"
           >
             ×
           </text>
@@ -139,11 +136,26 @@
         x={W / 2}
         y={padTop + gridH / 2}
         text-anchor="middle"
-        class="fill-muted-foreground"
-        style="font-size: 11px"
+        class="fill-muted-foreground chord-diagram-empty"
       >
         shape n/a
       </text>
     {/if}
   </svg>
 </div>
+
+<style>
+  .chord-diagram-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .chord-diagram-basefret {
+    font-size: 9px;
+  }
+  .chord-diagram-mute {
+    font-size: 10px;
+  }
+  .chord-diagram-empty {
+    font-size: 11px;
+  }
+</style>

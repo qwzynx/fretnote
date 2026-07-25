@@ -15,6 +15,7 @@
   import Button from "@/components/ui/Button.svelte";
   import Input from "@/components/ui/Input.svelte";
   import Select from "@/components/ui/Select.svelte";
+  import Card from "@/components/ui/Card.svelte";
   import { cn } from "@/lib/utils";
 
   const EMPTY_FRETS: Frets = [-1, -1, -1, -1, -1, -1];
@@ -55,7 +56,7 @@
   }
 </script>
 
-<div class="rounded-xl border border-border bg-muted/20">
+<Card class="bg-muted/20">
   <!-- Header -->
   <div
     class="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3"
@@ -193,4 +194,4 @@
       {/if}
     </div>
   </div>
-</div>
+</Card>

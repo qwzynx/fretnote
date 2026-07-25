@@ -35,7 +35,7 @@
       <div
         class={cn(
           col,
-          "pb-1 text-center text-[11px] font-semibold text-muted-foreground"
+          "pb-1 text-center text-3xs font-semibold text-muted-foreground"
         )}
       >
         {stringNames[s]}
@@ -59,7 +59,7 @@
               ? "Open — click to mute"
               : "Click to mute"}
           class={cn(
-            "flex size-5 items-center justify-center rounded-full border text-[11px] font-bold transition-colors",
+            "flex size-5 items-center justify-center rounded-full border text-3xs font-bold transition-colors",
             isMuted
               ? "border-muted-foreground/60 text-muted-foreground"
               : isOpen

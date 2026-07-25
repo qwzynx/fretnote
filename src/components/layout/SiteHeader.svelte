@@ -34,7 +34,7 @@
         <a
           href={`#${item.href}`}
           class={cn(
-            "inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-[0.8rem] font-medium transition-colors",
+            "inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-2xs font-medium transition-colors",
             active
               ? "bg-muted text-foreground"
               : "text-muted-foreground hover:text-foreground"
@@ -55,7 +55,7 @@
       >
         <Search />
         Search notes
-        <kbd class="ml-1 rounded border border-border bg-muted px-1 font-mono text-[10px]">⌘K</kbd>
+        <kbd class="ml-1 rounded border border-border bg-muted px-1 font-mono text-kbd">⌘K</kbd>
       </Button>
       <Button variant="ghost" size="icon-sm" href="#/settings" aria-label="Settings">
         <Settings class="size-4" />
