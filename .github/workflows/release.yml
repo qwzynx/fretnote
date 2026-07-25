@@ -135,7 +135,25 @@ jobs:
           fi
           keystore="$RUNNER_TEMP/release.jks"
           trap 'rm -f "$keystore"' EXIT
-          echo "$KEYSTORE_BASE64" | base64 -d > "$keystore"
+
+          # Tolerate wrapped/padded secrets: strip whitespace before decoding.
+          if ! printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > "$keystore" 2>/dev/null; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not valid base64. Re-set it with: base64 -w0 fretnote-release.p12 | gh secret set ANDROID_KEYSTORE_BASE64"
+            exit 1
+          fi
+          if [ ! -s "$keystore" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 decoded to an empty file."
+            exit 1
+          fi
+
+          # Fails loudly on a wrong store password or a non-PKCS12 payload,
+          # rather than surfacing later as a confusing apksigner error.
+          if ! keytool -list -keystore "$keystore" -storetype PKCS12 \
+                 -storepass:env KEYSTORE_PASSWORD > "$RUNNER_TEMP/ks.txt" 2>&1; then
+            echo "::error::Cannot open the keystore -- wrong ANDROID_KEYSTORE_PASSWORD, or the secret is not a PKCS12 file."
+            sed -e 's/^/  /' "$RUNNER_TEMP/ks.txt" | head -20
+            exit 1
+          fi
 
           tools="$ANDROID_HOME/build-tools/35.0.0"
           unsigned=src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
