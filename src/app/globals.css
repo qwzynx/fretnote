@@ -50,6 +50,21 @@
   --text-kbd: 0.625rem;
 }
 
+/* Height the bottom pill nav reserves at the foot of every scroll view. */
+@theme {
+  --spacing-safe-b: env(safe-area-inset-bottom, 0px);
+  --spacing-navbar: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Toolbars and chip rows scroll sideways without an ugly scrollbar on phones. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -126,15 +141,37 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* No grey flash when a finger lands on a button. */
+    -webkit-tap-highlight-color: transparent;
+    /* Keep the shell from rubber-banding behind the fixed chrome. */
+    overscroll-behavior-y: none;
   }
   html {
     @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  /* Taps register immediately instead of waiting on a double-tap-zoom guess. */
+  button,
+  a,
+  select,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+  /* Fat-finger friendly range thumbs on touch screens. */
+  @media (pointer: coarse) {
+    input[type="range"] {
+      height: 1.75rem;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      transform: scale(1.35);
+    }
   }
 }
 
 @media print {
   [data-print-hide] { display: none !important; }
-  header, footer { display: none !important; }
+  header, footer, nav[data-bottom-nav] { display: none !important; }
   .sticky { position: static !important; }
   .h-dvh { height: auto !important; }
   .overflow-y-auto { overflow: visible !important; }

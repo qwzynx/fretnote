@@ -28,8 +28,9 @@
     {@render trigger()}
   </span>
   {#if open}
+    <!-- Centred on the trigger and clamped to the viewport so it can't run off a narrow screen. -->
     <div
-      class="absolute bottom-full left-0 z-50 mb-1 min-w-max rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-md"
+      class="absolute bottom-full left-1/2 z-50 mb-1 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-md"
       role="tooltip"
     >
       {@render content()}

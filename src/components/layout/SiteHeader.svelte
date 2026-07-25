@@ -12,20 +12,22 @@
   ];
 </script>
 
-<header class="sticky top-0 z-40 border-b border-border/80 bg-background">
-  <div class="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
+<header
+  class="sticky top-0 z-40 border-b border-border/80 bg-background pt-[env(safe-area-inset-top,0px)]"
+>
+  <div class="mx-auto flex h-12 w-full max-w-6xl items-center gap-4 px-4 sm:h-14">
     <a href="#/" class="flex items-center gap-2 font-heading">
       <span
-        class="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25"
+        class="flex size-7 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25 sm:size-8"
       >
-        <Guitar class="size-4.5" />
+        <Guitar class="size-4 sm:size-4.5" />
       </span>
-      <span class="text-lg font-semibold tracking-tight">
+      <span class="text-base font-semibold tracking-tight sm:text-lg">
         Fret<span class="text-primary">note</span>
       </span>
     </a>
 
-    <nav class="ml-2 hidden items-center gap-1 sm:flex">
+    <nav class="ml-2 hidden items-center gap-1 md:flex">
       {#each NAV as item}
         {@const active =
           item.href === "/"
@@ -46,12 +48,13 @@
       {/each}
     </nav>
 
-    <div class="ml-auto flex items-center gap-2">
+    <!-- On phones these all live in the bottom pill nav instead. -->
+    <div class="ml-auto hidden items-center gap-2 md:flex">
       <Button
         variant="outline"
         size="sm"
         onclick={() => searchOpenStore.show()}
-        class="hidden text-muted-foreground md:inline-flex"
+        class="text-muted-foreground"
       >
         <Search />
         Search notes

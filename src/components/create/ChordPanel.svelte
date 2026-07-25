@@ -73,14 +73,14 @@
           : "Look up a shape and add it to the note."}
       </p>
     </div>
-    <div class="flex gap-1 rounded-lg border border-border bg-background p-1">
+    <div class="flex w-full gap-1 rounded-lg border border-border bg-background p-1 sm:w-auto">
       {#each [{ id: "search", label: "Search", Icon: Search }, { id: "detect", label: "From frets", Icon: Guitar }] as m}
         {@const Icon = m.Icon}
         <button
           type="button"
           onclick={() => (mode = m.id as "search" | "detect")}
           class={cn(
-            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+            "flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors sm:h-auto sm:flex-none sm:py-1.5",
             mode === m.id
               ? "bg-muted text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground"
@@ -93,9 +93,9 @@
     </div>
   </div>
 
-  <div class="flex flex-wrap items-start gap-x-6 gap-y-4 p-4">
+  <div class="flex flex-wrap items-start gap-x-6 gap-y-4 p-3 sm:p-4">
     <!-- Input side -->
-    <div class="min-w-[14rem] flex-1 space-y-3">
+    <div class="min-w-full flex-1 space-y-3 sm:min-w-[14rem]">
       {#if mode === "search"}
         <div class="space-y-1.5">
           <Input
@@ -120,7 +120,7 @@
                 onclick={() => place(name)}
                 title={onInsert ? `Insert [${name}]` : `Add ${name}`}
                 class={cn(
-                  "rounded-md border px-2 py-1 font-mono text-xs font-medium transition-colors",
+                  "h-9 rounded-md border px-3 font-mono text-sm font-medium transition-colors sm:h-auto sm:px-2 sm:py-1 sm:text-xs",
                   added
                     ? "border-primary/40 bg-primary/10 text-primary"
                     : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-primary/5"
@@ -162,7 +162,7 @@
     </div>
 
     <!-- Result side -->
-    <div class="flex min-w-[8rem] flex-col items-center gap-2.5">
+    <div class="flex w-full min-w-[8rem] flex-col items-center gap-2.5 sm:w-auto">
       {#if active}
         <ChordDiagram name={active} class="w-24" />
         <FingerLegend class="justify-center" />

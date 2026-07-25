@@ -68,34 +68,38 @@
 
 {#if searchOpenStore.open}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- Full-height sheet on phones; floating palette from `sm` up. -->
   <div
-    class="fixed inset-0 z-50 flex items-start justify-center bg-black/60 pt-[15vh] backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-stretch justify-center bg-black/60 backdrop-blur-sm sm:items-start sm:pt-[15vh]"
     onclick={(e) => { if (e.target === e.currentTarget) close(); }}
     onkeydown={(e) => { if (e.key === "Escape") close(); }}
   >
-    <div class="w-full max-w-xl overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+    <div
+      class="flex w-full flex-col overflow-hidden border-border bg-card pt-[env(safe-area-inset-top,0px)] shadow-2xl sm:h-auto sm:max-w-xl sm:rounded-xl sm:border sm:pt-0"
+    >
       <!-- Input -->
-      <div class="flex items-center gap-3 border-b border-border px-4 py-3">
+      <div class="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
         <Search class="size-4 shrink-0 text-muted-foreground" />
         <input
           bind:this={inputEl}
           bind:value={query}
           onkeydown={handleKeydown}
+          type="search"
           placeholder="Search notes…"
-          class="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          class="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground sm:text-sm"
         />
         <button
           type="button"
           onclick={close}
-          class="rounded-md p-0.5 text-muted-foreground hover:text-foreground"
+          class="-mr-1.5 flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground active:bg-muted sm:-mr-0 sm:size-6"
           aria-label="Close search"
         >
-          <X class="size-4" />
+          <X class="size-5 sm:size-4" />
         </button>
       </div>
 
       <!-- Results -->
-      <div class="max-h-80 overflow-y-auto py-1">
+      <div class="flex-1 overflow-y-auto overscroll-contain py-1 sm:max-h-80 sm:flex-none">
         {#if results().length === 0}
           <p class="px-4 py-6 text-center text-sm text-muted-foreground">
             {query ? "No notes found." : "Start typing to search…"}
@@ -105,7 +109,7 @@
             <button
               type="button"
               onclick={() => openNote(note)}
-              class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors {i === activeIdx
+              class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors sm:py-2.5 {i === activeIdx
                 ? 'bg-muted'
                 : 'hover:bg-muted/50'}"
             >
@@ -130,7 +134,8 @@
         {/if}
       </div>
 
-      <div class="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+      <!-- Keyboard hints are noise on a touch device. -->
+      <div class="hidden shrink-0 border-t border-border px-4 py-2 text-xs text-muted-foreground sm:block">
         <span class="mr-3"><kbd class="rounded border border-border bg-muted px-1 font-mono">↑↓</kbd> navigate</span>
         <span class="mr-3"><kbd class="rounded border border-border bg-muted px-1 font-mono">↵</kbd> open</span>
         <span><kbd class="rounded border border-border bg-muted px-1 font-mono">Esc</kbd> close</span>

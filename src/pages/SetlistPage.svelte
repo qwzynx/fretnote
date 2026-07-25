@@ -82,9 +82,9 @@
     <Button variant="ghost" size="sm" class="mt-4" href="#/setlists">Back</Button>
   </main>
 {:else}
-  <main class="mx-auto w-full max-w-3xl px-4 py-8">
+  <main class="mx-auto w-full max-w-3xl px-4 py-4 sm:py-8">
     <!-- Header -->
-    <div class="mb-6 flex items-start justify-between gap-4">
+    <div class="mb-5 flex items-start justify-between gap-4 sm:mb-6">
       <div class="flex items-center gap-2">
         <Button variant="ghost" size="sm" class="-ml-2 text-muted-foreground" href="#/setlists">
           <ArrowLeft />
@@ -96,33 +96,36 @@
         size="sm"
         class="text-destructive hover:bg-destructive/10"
         onclick={handleDelete}
+        aria-label="Delete setlist"
       >
         <Trash2 />
-        Delete setlist
+        <span class="hidden sm:inline">Delete setlist</span>
       </Button>
     </div>
 
     <!-- Title -->
-    <div class="mb-6">
+    <div class="mb-5 sm:mb-6">
       {#if editingTitle}
-        <div class="flex items-center gap-2">
-          <Input bind:value={titleDraft} class="font-heading text-xl font-semibold" />
+        <div class="flex flex-wrap items-center gap-2">
+          <Input bind:value={titleDraft} class="min-w-0 flex-1 font-heading text-lg font-semibold sm:text-xl" />
           <Button size="sm" onclick={saveTitle}>Save</Button>
           <Button variant="ghost" size="sm" onclick={() => (editingTitle = false)}>Cancel</Button>
         </div>
       {:else}
         <div class="flex items-center gap-2">
-          <div class="flex items-center gap-2">
-            <ListMusic class="size-5 text-primary" />
-            <h1 class="font-heading text-2xl font-semibold tracking-tight">{setlist.title}</h1>
+          <div class="flex min-w-0 items-center gap-2">
+            <ListMusic class="size-5 shrink-0 text-primary" />
+            <h1 class="truncate font-heading text-xl font-semibold tracking-tight sm:text-2xl">
+              {setlist.title}
+            </h1>
           </div>
           <button
             type="button"
             onclick={() => (editingTitle = true)}
-            class="rounded p-1 text-muted-foreground hover:text-foreground"
+            class="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground active:bg-muted sm:size-7"
             aria-label="Edit title"
           >
-            <Pencil class="size-3.5" />
+            <Pencil class="size-4 sm:size-3.5" />
           </button>
         </div>
         {#if setlist.description}
@@ -147,8 +150,9 @@
       <div class="mb-8 space-y-2">
         {#each setlist.notes as note, i ((note as NoteWithItemId)._itemId)}
           {@const itemId = (note as NoteWithItemId)._itemId}
+          <!-- Phones: song info on top, controls on their own full-width row. -->
           <div
-            class="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 {i === currentIdx
+            class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-card px-3 py-2.5 sm:flex-nowrap sm:px-4 sm:py-3 {i === currentIdx
               ? 'ring-2 ring-primary'
               : ''}"
           >
@@ -164,35 +168,35 @@
               {/if}
             </span>
 
-            <div class="min-w-0 flex-1">
+            <a href={`#/notes/${note.id}`} class="min-w-0 flex-1 outline-none">
               <p class="truncate font-medium">{note.title}</p>
               <p class="truncate text-xs text-muted-foreground">{note.artist}</p>
-            </div>
+            </a>
 
             <Badge variant="secondary" class="shrink-0 font-mono">{note.key}</Badge>
 
-            <div class="flex items-center gap-1">
+            <div class="flex w-full items-center gap-1 sm:w-auto">
               <button
                 type="button"
                 onclick={() => handleMove(itemId, "up")}
                 disabled={i === 0}
                 aria-label="Move up"
-                class="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                class="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground active:bg-muted disabled:opacity-30 sm:size-7"
               >
-                <ArrowUp class="size-3.5" />
+                <ArrowUp class="size-4 sm:size-3.5" />
               </button>
               <button
                 type="button"
                 onclick={() => handleMove(itemId, "down")}
                 disabled={i === setlist.notes.length - 1}
                 aria-label="Move down"
-                class="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                class="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground active:bg-muted disabled:opacity-30 sm:size-7"
               >
-                <ArrowDown class="size-3.5" />
+                <ArrowDown class="size-4 sm:size-3.5" />
               </button>
               <a
                 href={`#/notes/${note.id}`}
-                class="rounded px-2 py-1 text-xs text-primary hover:bg-primary/10"
+                class="ml-auto flex h-9 items-center rounded-md px-3 text-sm font-medium text-primary hover:bg-primary/10 sm:ml-0 sm:h-7 sm:text-xs"
               >
                 Open
               </a>
@@ -200,9 +204,9 @@
                 type="button"
                 onclick={() => handleRemoveNote(itemId)}
                 aria-label="Remove from setlist"
-                class="rounded p-1 text-muted-foreground hover:text-destructive"
+                class="flex size-9 items-center justify-center rounded-md text-muted-foreground hover:text-destructive active:bg-muted sm:size-7"
               >
-                <X class="size-3.5" />
+                <X class="size-4 sm:size-3.5" />
               </button>
             </div>
           </div>
@@ -210,18 +214,20 @@
       </div>
 
       <!-- Prev / Next navigator -->
-      <div class="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-5 py-3">
+      <div class="flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/30 px-2 py-2.5 sm:px-5 sm:py-3">
         <Button
           variant="ghost"
           size="sm"
+          class="shrink-0"
           disabled={currentIdx === 0}
           onclick={() => (currentIdx = Math.max(0, currentIdx - 1))}
+          aria-label="Previous song"
         >
           <ChevronLeft />
-          Previous
+          <span class="hidden sm:inline">Previous</span>
         </Button>
-        <div class="text-center">
-          <p class="text-sm font-medium">{setlist.notes[currentIdx]?.title ?? ""}</p>
+        <div class="min-w-0 text-center">
+          <p class="truncate text-sm font-medium">{setlist.notes[currentIdx]?.title ?? ""}</p>
           <p class="text-xs text-muted-foreground">
             {currentIdx + 1} / {setlist.notes.length}
           </p>
@@ -229,10 +235,12 @@
         <Button
           variant="ghost"
           size="sm"
+          class="shrink-0"
           disabled={currentIdx === setlist.notes.length - 1}
           onclick={() => (currentIdx = Math.min(setlist!.notes.length - 1, currentIdx + 1))}
+          aria-label="Next song"
         >
-          Next
+          <span class="hidden sm:inline">Next</span>
           <ChevronRight />
         </Button>
       </div>

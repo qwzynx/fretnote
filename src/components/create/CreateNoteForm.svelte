@@ -11,6 +11,7 @@
   import { TUNINGS, DEFAULT_TUNING } from "@/lib/music/tunings";
   import { emptyPattern, type StrokeType } from "@/lib/strumming";
   import { getSettings } from "@/lib/settings";
+  import { cn } from "@/lib/utils";
   import Button from "@/components/ui/Button.svelte";
   import Input from "@/components/ui/Input.svelte";
   import Label from "@/components/ui/Label.svelte";
@@ -69,6 +70,8 @@
   let pattern = $state<StrokeType[]>(emptyPattern());
   let bpm = $state<number | undefined>(undefined);
   let finderOpen = $state(false);
+  /** Below `lg` the two columns don't fit side by side, so they take turns. */
+  let mobilePane = $state<"edit" | "preview">("edit");
 
   let textareaEl: HTMLTextAreaElement;
 
@@ -235,9 +238,45 @@
 
 <svelte:window onkeydown={handleFormKey} />
 
+<!-- ══ Pane switch + save, pinned while the long form scrolls (below lg) ══ -->
+<div
+  class="sticky top-0 z-30 -mx-4 mb-5 flex items-center gap-2 border-b border-border/80 bg-background/95 px-4 py-2 backdrop-blur lg:hidden"
+>
+  <div class="flex flex-1 rounded-lg border border-border p-0.5">
+    {#each [{ id: "edit", label: "Edit" }, { id: "preview", label: "Preview" }] as pane}
+      <button
+        type="button"
+        onclick={() => (mobilePane = pane.id as "edit" | "preview")}
+        aria-pressed={mobilePane === pane.id}
+        class={cn(
+          "h-9 flex-1 rounded-md text-sm font-medium transition-colors",
+          mobilePane === pane.id
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground"
+        )}
+      >
+        {pane.label}
+      </button>
+    {/each}
+  </div>
+  <Button
+    size="sm"
+    class="h-10 px-4"
+    disabled={saving || !title.trim() || !artist.trim()}
+    onclick={save}
+  >
+    {saving ? "Saving…" : "Save"}
+  </Button>
+</div>
+
 <div class="grid gap-8 lg:h-full lg:grid-cols-2 lg:gap-0">
   <!-- ══ Editors (left) ══════════════════════════════════════════ -->
-  <div class="min-w-0 space-y-8 lg:overflow-y-auto lg:pb-8 lg:pl-[max(1rem,calc(50vw-35rem))] lg:pr-8">
+  <div
+    class={cn(
+      "min-w-0 space-y-8 lg:overflow-y-auto lg:pb-8 lg:pl-[max(1rem,calc(50vw-35rem))] lg:pr-8 lg:block",
+      mobilePane !== "edit" && "hidden"
+    )}
+  >
     <!-- Metadata -->
     <section class="space-y-4">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -270,7 +309,7 @@
                 0,
                 Math.min(12, Number((e.target as HTMLInputElement).value))
               ))}
-            class="flex h-8 w-20 rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors [appearance:textfield] focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 dark:bg-input/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            class="flex h-10 w-20 rounded-lg border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors [appearance:textfield] focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:h-8 sm:text-sm dark:bg-input/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
         </div>
 
@@ -305,12 +344,13 @@
       </div>
 
       <div class="space-y-3">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Label for="chordsheet">Editor</Label>
           <div class="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
+              class="flex-1 sm:flex-none"
               disabled={!title.trim() || !artist.trim() || fetchingLyrics}
               onclick={handleFetchLyrics}
             >
@@ -324,6 +364,7 @@
             <Button
               variant={finderOpen ? "secondary" : "outline"}
               size="sm"
+              class="flex-1 sm:flex-none"
               onclick={() => (finderOpen = !finderOpen)}
               aria-expanded={finderOpen}
             >
@@ -339,8 +380,9 @@
           bind:value={chordSheet}
           rows={16}
           spellcheck={false}
+          autocapitalize="off"
           placeholder={"[Verse]\n[G]Here is a [D]line with [Em]chords\n[C]Another line below"}
-          class="w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 font-mono text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 dark:bg-input/30"
+          class="w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 font-mono text-base leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 sm:text-sm dark:bg-input/30"
         ></textarea>
 
         <p class="text-xs text-muted-foreground">
@@ -425,7 +467,7 @@
             const v = (e.target as HTMLInputElement).value;
             bpm = v === "" ? undefined : Number(v);
           }}
-          class="flex h-8 w-24 rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-sm [appearance:textfield] focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 dark:bg-input/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          class="flex h-10 w-24 rounded-lg border border-input bg-transparent px-3 py-1 text-base shadow-sm [appearance:textfield] focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:h-8 sm:text-sm dark:bg-input/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
       </div>
       <StrummingEditor {pattern} onChange={(p) => (pattern = p)} />
@@ -433,11 +475,16 @@
 
     <Separator />
 
-    <div class="flex justify-end gap-3">
-      <Button variant="outline" onclick={() => window.history.back()}>
+    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <Button
+        variant="outline"
+        class="w-full sm:w-auto"
+        onclick={() => window.history.back()}
+      >
         Cancel
       </Button>
       <Button
+        class="w-full sm:w-auto"
         disabled={saving || !title.trim() || !artist.trim()}
         onclick={save}
       >
@@ -447,7 +494,12 @@
   </div>
 
   <!-- ══ Preview (right) ═════════════════════════════════════════ -->
-  <div class="lg:overflow-y-auto lg:border-l lg:border-border lg:pl-8 lg:pr-[max(1rem,calc(50vw-35rem))]">
+  <div
+    class={cn(
+      "lg:block lg:overflow-y-auto lg:border-l lg:border-border lg:pl-8 lg:pr-[max(1rem,calc(50vw-35rem))]",
+      mobilePane !== "preview" && "hidden"
+    )}
+  >
     <NotePreview
       {title}
       {artist}
