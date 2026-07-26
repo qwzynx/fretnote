@@ -1,58 +1,5 @@
-import Database from "@tauri-apps/plugin-sql";
+import { getDb } from "@/lib/db-driver";
 import type { Difficulty, Note, NoteType, TabBlock } from "@/lib/types";
-
-let _db: Database | null = null;
-
-async function getDb(): Promise<Database> {
-  if (!_db) {
-    _db = await Database.load("sqlite:fretnote.db");
-    await _db.execute(`
-      CREATE TABLE IF NOT EXISTS notes (
-        id                TEXT PRIMARY KEY,
-        slug              TEXT UNIQUE NOT NULL,
-        type              TEXT NOT NULL,
-        title             TEXT NOT NULL,
-        artist            TEXT NOT NULL,
-        key               TEXT NOT NULL,
-        capo              INTEGER NOT NULL DEFAULT 0,
-        difficulty        TEXT NOT NULL DEFAULT 'beginner',
-        tags              TEXT NOT NULL DEFAULT '[]',
-        created_at        TEXT NOT NULL,
-        chord_sheet       TEXT,
-        tab_blocks        TEXT,
-        chords            TEXT NOT NULL DEFAULT '[]',
-        strumming_pattern TEXT,
-        bpm               INTEGER
-      )
-    `);
-    await _db.execute(
-      `ALTER TABLE notes ADD COLUMN strumming_pattern TEXT`
-    ).catch(() => { /* column already exists */ });
-    await _db.execute(
-      `ALTER TABLE notes ADD COLUMN bpm INTEGER`
-    ).catch(() => { /* column already exists */ });
-    await _db.execute(
-      `ALTER TABLE notes ADD COLUMN is_favorite INTEGER NOT NULL DEFAULT 0`
-    ).catch(() => { /* column already exists */ });
-    await _db.execute(`
-      CREATE TABLE IF NOT EXISTS setlists (
-        id          TEXT PRIMARY KEY,
-        title       TEXT NOT NULL,
-        description TEXT NOT NULL DEFAULT '',
-        created_at  TEXT NOT NULL
-      )
-    `);
-    await _db.execute(`
-      CREATE TABLE IF NOT EXISTS setlist_items (
-        id          TEXT PRIMARY KEY,
-        setlist_id  TEXT NOT NULL REFERENCES setlists(id) ON DELETE CASCADE,
-        note_id     TEXT NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
-        position    INTEGER NOT NULL DEFAULT 0
-      )
-    `);
-  }
-  return _db;
-}
 
 // ── Read ──────────────────────────────────────────────────────────────────────
 
