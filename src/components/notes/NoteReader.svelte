@@ -2,6 +2,8 @@
   import {
     ChevronDown,
     Gauge,
+    LayoutGrid,
+    LayoutList,
     Minus,
     Pause,
     Play,
@@ -34,6 +36,7 @@
   let fontSize = $state(_s.defaultFontSize);
   let scrolling = $state(false);
   let speed = $state(_s.defaultScrollSpeed);
+  let detailed = $state(false);
 
   let rafId: number | null = null;
   let lastTs = 0;
@@ -198,6 +201,22 @@
 
       <Separator orientation="vertical" class="hidden h-6 sm:block" />
 
+      <Button
+        variant={detailed ? "default" : "outline"}
+        size="sm"
+        onclick={() => (detailed = !detailed)}
+        aria-label={detailed ? "Switch to summary view" : "Switch to detailed view"}
+      >
+        {#if detailed}
+          <LayoutGrid />
+        {:else}
+          <LayoutList />
+        {/if}
+        <span class="hidden sm:inline">{detailed ? "Detailed" : "Summary"}</span>
+      </Button>
+
+      <Separator orientation="vertical" class="hidden h-6 sm:block" />
+
       <div class="ml-auto flex items-center gap-2 sm:ml-0">
         <Button
           variant={scrolling ? "default" : "outline"}
@@ -237,18 +256,30 @@
         <ChevronDown class="size-4" />
         Chords in this note
       </div>
-      <!-- Swipeable strip on phones so the diagrams stay legible. -->
-      <div
-        class="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:gap-4 sm:px-0"
-      >
-        {#each note.chords as c}
-          <ChordDiagram
-            name={transposeKey(c, note.type === "chords" ? transpose : 0)}
-            class="w-[4.5rem] shrink-0 sm:w-20"
-          />
-        {/each}
-      </div>
-      <FingerLegend class="mt-2.5" />
+      {#if detailed}
+        <!-- Swipeable strip on phones so the diagrams stay legible. -->
+        <div
+          class="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:gap-4 sm:px-0"
+        >
+          {#each note.chords as c}
+            <ChordDiagram
+              name={transposeKey(c, note.type === "chords" ? transpose : 0)}
+              class="w-[4.5rem] shrink-0 sm:w-20"
+            />
+          {/each}
+        </div>
+        <FingerLegend class="mt-2.5" />
+      {:else}
+        <div class="flex flex-wrap gap-1.5">
+          {#each note.chords as c}
+            <span
+              class="rounded-md border border-border bg-card/60 px-2 py-1 font-mono text-sm text-foreground"
+            >
+              {transposeKey(c, note.type === "chords" ? transpose : 0)}
+            </span>
+          {/each}
+        </div>
+      {/if}
     </div>
   {/if}
 
@@ -263,7 +294,9 @@
           {note.bpm} BPM
         </p>
       {/if}
-      <StrummingPreview pattern={note.strummingPattern as StrokeType[]} />
+      {#if detailed}
+        <StrummingPreview pattern={note.strummingPattern as StrokeType[]} />
+      {/if}
     </div>
   {/if}
 
@@ -273,7 +306,11 @@
       <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Metronome
       </p>
-      <Metronome bpm={note.bpm} />
+      {#if detailed}
+        <Metronome bpm={note.bpm} />
+      {:else}
+        <span class="font-mono text-sm font-semibold">{note.bpm} BPM</span>
+      {/if}
     </div>
   {/if}
 
@@ -284,6 +321,7 @@
       {transpose}
       {fontSize}
       tabBlocks={note.tabBlocks}
+      {detailed}
     />
   {:else if note.tabBlocks?.length}
     <div class="space-y-6">

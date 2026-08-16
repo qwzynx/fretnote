@@ -15,6 +15,7 @@
     fontSize = 16,
     tabBlocks = [] as TabBlock[],
     stringNames,
+    detailed = false,
     class: className = "",
   }: {
     sheet: string;
@@ -23,6 +24,8 @@
     tabBlocks?: TabBlock[];
     /** String labels for the finger-placement diagrams; defaults to the saved tuning. */
     stringNames?: readonly string[];
+    /** Show full chord diagrams inline above the lyrics instead of just the chord name. */
+    detailed?: boolean;
     class?: string;
   } = $props();
 
@@ -77,24 +80,31 @@
         {#each line.segments as seg, j}
           <span class="inline-flex max-w-full flex-col sm:max-w-none">
             <span
-              class="h-5 font-semibold leading-5 text-primary"
+              class={cn(
+                "font-semibold text-primary",
+                detailed && seg.chord ? "mb-1 block" : "h-5 leading-5"
+              )}
               style="font-size: {fontSize * 0.82}px"
             >
               {#if seg.chord}
-                <Popover>
-                  {#snippet trigger()}
-                    <button
-                      class="cursor-pointer rounded px-0.5 outline-none hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring"
-                      aria-label="Show {seg.chord} chord diagram"
-                      type="button"
-                    >
-                      {seg.chord}
-                    </button>
-                  {/snippet}
-                  {#snippet content()}
-                    <ChordDiagram name={seg.chord!} />
-                  {/snippet}
-                </Popover>
+                {#if detailed}
+                  <ChordDiagram name={seg.chord} class="w-14" frets={4} showFingers={false} />
+                {:else}
+                  <Popover>
+                    {#snippet trigger()}
+                      <button
+                        class="cursor-pointer rounded px-0.5 outline-none hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-label="Show {seg.chord} chord diagram"
+                        type="button"
+                      >
+                        {seg.chord}
+                      </button>
+                    {/snippet}
+                    {#snippet content()}
+                      <ChordDiagram name={seg.chord!} />
+                    {/snippet}
+                  </Popover>
+                {/if}
               {:else if seg.strum}
                 {@const info = STROKE_DISPLAY[seg.strum]}
                 <span
