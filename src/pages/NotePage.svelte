@@ -140,7 +140,6 @@
   <main
     bind:this={mainEl}
     use:swipeHorizontal={{
-      edgeGate: 24,
       directions: "right",
       enabled: () => isTouch.current,
       distanceThreshold: mainEl ? Math.min(140, mainEl.clientWidth * 0.35) : 100,

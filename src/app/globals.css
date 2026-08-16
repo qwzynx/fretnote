@@ -193,4 +193,15 @@
   ::-webkit-scrollbar-corner {
     background: transparent;
   }
+
+  /* No scrollbars below the phone breakpoint — nothing to grab with a
+     finger, and native apps don't show one. */
+  @media (max-width: 639px) {
+    * {
+      scrollbar-width: none;
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  }
 }

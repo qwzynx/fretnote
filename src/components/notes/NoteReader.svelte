@@ -305,9 +305,9 @@
             </p>
           {/if}
           {#if block.hint}
-            <div class="flex flex-wrap items-start gap-3 sm:flex-nowrap">
-              <TabHintView hint={block.hint} />
-              <TabView tab={block.columns} {fontSize} class="min-w-0 flex-1" />
+            <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
+              <TabHintView hint={block.hint} class="w-40 sm:w-[152px]" />
+              <TabView tab={block.columns} {fontSize} class="w-full min-w-0 sm:flex-1" />
             </div>
           {:else}
             <TabView tab={block.columns} {fontSize} />
