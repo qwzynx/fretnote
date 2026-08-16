@@ -2,6 +2,7 @@
   import type { TabBlock } from "@/lib/types";
   import { parseChordSheet } from "@/lib/music/parse";
   import { transposeChordSheet } from "@/lib/music/transpose";
+  import { STROKE_DISPLAY } from "@/lib/strumming";
   import { cn } from "@/lib/utils";
   import Popover from "@/components/ui/Popover.svelte";
   import ChordDiagram from "./ChordDiagram.svelte";
@@ -94,6 +95,14 @@
                     <ChordDiagram name={seg.chord!} />
                   {/snippet}
                 </Popover>
+              {:else if seg.strum}
+                {@const info = STROKE_DISPLAY[seg.strum]}
+                <span
+                  class={cn("px-0.5 font-bold", info.className)}
+                  title="Strum: {info.label}"
+                >
+                  {info.symbol}
+                </span>
               {:else}
                 {" "}
               {/if}

@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
   import { toast } from "svelte-sonner";
-  import { Music4, Guitar, Wand2, Plus, FileText, Loader2 } from "@lucide/svelte";
+  import { Music4, Guitar, Wand2, AudioWaveform, Plus, FileText, Loader2 } from "@lucide/svelte";
 
   import type { TabBlock, TabColumn } from "@/lib/types";
   import { createNote, updateNote, getNote } from "@/lib/db";
@@ -20,6 +20,7 @@
   import Separator from "@/components/ui/Separator.svelte";
   import Select from "@/components/ui/Select.svelte";
   import ChordPanel from "./ChordPanel.svelte";
+  import StrumPanel from "./StrumPanel.svelte";
   import TabEditor from "./TabEditor.svelte";
   import StrummingEditor from "./StrummingEditor.svelte";
   import NotePreview from "./NotePreview.svelte";
@@ -72,6 +73,7 @@
   let pattern = $state<StrokeType[]>(emptyPattern());
   let bpm = $state<number | undefined>(undefined);
   let finderOpen = $state(false);
+  let strumPickerOpen = $state(false);
   /** Below `lg` the two columns don't fit side by side, so they take turns. */
   let mobilePane = $state<"edit" | "preview">("edit");
 
@@ -177,6 +179,10 @@
 
   function insertChord(name: string) {
     insertAtCursor(`[${name}]`);
+  }
+
+  function insertStrum(stroke: StrokeType) {
+    insertAtCursor(`{${stroke}}`);
   }
 
   function insertTabRef(label: string) {
@@ -380,6 +386,16 @@
               <Wand2 />
               Chord finder
             </Button>
+            <Button
+              variant={strumPickerOpen ? "secondary" : "outline"}
+              size="sm"
+              class="flex-1 sm:flex-none"
+              onclick={() => (strumPickerOpen = !strumPickerOpen)}
+              aria-expanded={strumPickerOpen}
+            >
+              <AudioWaveform />
+              Strum marks
+            </Button>
           </div>
         </div>
 
@@ -390,13 +406,17 @@
           rows={16}
           spellcheck={false}
           autocapitalize="off"
-          placeholder={"[Verse]\n[G]Here is a [D]line with [Em]chords\n[C]Another line below"}
+          placeholder={"[Verse]\n[G]Here is a [D]line with [Em]chords\n{D}[C]Another line, strummed down on the first beat"}
           class="w-full resize-y rounded-lg border border-input bg-transparent px-3 py-2 font-mono text-base leading-relaxed placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 sm:text-sm dark:bg-input/30"
         ></textarea>
 
         <p class="text-xs text-muted-foreground">
           Put chords in brackets right before the syllable, e.g.
-          <code class="rounded bg-muted px-1 py-0.5">[Am]</code>. A line like
+          <code class="rounded bg-muted px-1 py-0.5">[Am]</code>. Put a strum
+          mark in braces the same way, e.g.
+          <code class="rounded bg-muted px-1 py-0.5">{"{D}"}</code> for a down-
+          strum or <code class="rounded bg-muted px-1 py-0.5">{"{U}"}</code>
+          for up. A line like
           <code class="rounded bg-muted px-1 py-0.5">[Verse 1]</code> becomes a
           section header, and
           <code class="rounded bg-muted px-1 py-0.5">[tab: Intro]</code> drops
@@ -409,6 +429,10 @@
             onAddChord={addChord}
             onInsert={insertChord}
           />
+        {/if}
+
+        {#if strumPickerOpen}
+          <StrumPanel onInsert={insertStrum} />
         {/if}
       </div>
     </section>

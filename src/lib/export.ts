@@ -260,8 +260,11 @@ export async function exportNoteAsPdf(note: Note): Promise<void> {
       let chordLine = "";
       let lyricLine = "";
       for (const seg of line.segments) {
-        if (seg.chord) {
-          chordLine = chordLine.padEnd(lyricLine.length, " ") + seg.chord;
+        // jsPDF's core Courier font lacks the arrow glyphs used on-screen, so
+        // fall back to the plain stroke letter (D/U/d/u/X) here.
+        const mark = seg.chord ?? seg.strum ?? "";
+        if (mark) {
+          chordLine = chordLine.padEnd(lyricLine.length, " ") + mark;
         }
         lyricLine += seg.text;
       }

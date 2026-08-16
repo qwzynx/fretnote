@@ -1,6 +1,10 @@
+import type { StrokeType } from "@/lib/strumming";
+
 export interface ChordSegment {
   /** Chord shown above this segment, or null for plain lyric text. */
   chord: string | null;
+  /** Strum stroke shown above this segment, or null. Mutually exclusive with `chord`. */
+  strum: StrokeType | null;
   /** Lyric text that sits under the chord (may be empty). */
   text: string;
 }
@@ -15,6 +19,9 @@ const SECTION_RE = /^\s*\[([^\]]+)\]\s*$/;
 // A line that is only [tab: Name] pulls a named tab block into the flow.
 const TABREF_RE = /^\s*\[\s*tab:\s*([^\]]+?)\s*\]\s*$/i;
 const INLINE_CHORD_RE = /\[([^\]]+)\]/g;
+// {D}/{U}/{d}/{u}/{X} places a strum stroke above the syllable that follows,
+// the same way [Chord] places a chord.
+const INLINE_MARKER_RE = /\[([^\]]+)\]|\{([DUduX])\}/g;
 
 // Non-chord labels that appear in bracket notation as structural/literary markers.
 const NON_CHORD_LABELS = new Set([
@@ -35,10 +42,10 @@ function isNonChordLabel(s: string): boolean {
 }
 
 /**
- * Parse one line of a chord sheet written with inline [Chord] markers into
- * segments so chords can be rendered positioned above the syllable that
- * follows them. A line that is only a single [Label] (e.g. "[Verse 1]") is
- * treated as a section header rather than a chord.
+ * Parse one line of a chord sheet written with inline [Chord] and {Strum}
+ * markers into segments so chords/strums can be rendered positioned above
+ * the syllable that follows them. A line that is only a single [Label]
+ * (e.g. "[Verse 1]") is treated as a section header rather than a chord.
  */
 export function parseChordLine(line: string): ParsedLine {
   if (line.trim() === "") return { kind: "blank" };
@@ -57,27 +64,31 @@ export function parseChordLine(line: string): ParsedLine {
   let leading = "";
   let match: RegExpExecArray | null;
 
-  INLINE_CHORD_RE.lastIndex = 0;
-  while ((match = INLINE_CHORD_RE.exec(line)) !== null) {
+  INLINE_MARKER_RE.lastIndex = 0;
+  while ((match = INLINE_MARKER_RE.exec(line)) !== null) {
     const before = line.slice(lastIndex, match.index);
     if (segments.length === 0 && before) {
-      // Text before the first chord has no chord above it.
+      // Text before the first marker has no chord/strum above it.
       leading = before;
     } else if (before) {
       segments[segments.length - 1].text += before;
     }
-    segments.push({ chord: match[1].trim(), text: "" });
+    if (match[1] !== undefined) {
+      segments.push({ chord: match[1].trim(), strum: null, text: "" });
+    } else {
+      segments.push({ chord: null, strum: match[2] as StrokeType, text: "" });
+    }
     lastIndex = match.index + match[0].length;
   }
 
   const trailing = line.slice(lastIndex);
   if (segments.length === 0) {
-    return { kind: "lyric", segments: [{ chord: null, text: line }] };
+    return { kind: "lyric", segments: [{ chord: null, strum: null, text: line }] };
   }
   if (trailing) segments[segments.length - 1].text += trailing;
 
   const result: ChordSegment[] = [];
-  if (leading) result.push({ chord: null, text: leading });
+  if (leading) result.push({ chord: null, strum: null, text: leading });
   result.push(...segments);
   return { kind: "lyric", segments: result };
 }
