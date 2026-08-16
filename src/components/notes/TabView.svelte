@@ -68,6 +68,7 @@
 
 <div
   use:measureWidth
+  data-no-swipe-nav
   class={cn(
     "overflow-x-auto rounded-lg border border-border bg-card/60 p-3 sm:p-4",
     className

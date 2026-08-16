@@ -23,6 +23,8 @@
   } from "@/lib/setlists";
   import type { SetlistWithNotes, Note } from "@/lib/types";
   import { goto } from "@/lib/nav-stack.svelte";
+  import { swipeHorizontal } from "@/lib/actions/swipe-horizontal";
+  import { isTouch } from "@/lib/media.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Input from "@/components/ui/Input.svelte";
   import Separator from "@/components/ui/Separator.svelte";
@@ -34,6 +36,35 @@
   let editingTitle = $state(false);
   let titleDraft = $state("");
   let currentIdx = $state(0);
+  let labelOffset = $state(0);
+
+  function handleSongDragMove(dx: number) {
+    if (!setlist) return;
+    const atStart = currentIdx === 0 && dx > 0;
+    const atEnd = currentIdx === setlist.notes.length - 1 && dx < 0;
+    if (atStart || atEnd) return;
+    labelOffset = Math.max(-24, Math.min(24, dx * 0.3));
+  }
+
+  function handleSongCommit(direction: "left" | "right") {
+    if (!setlist) return;
+    if (direction === "left" && currentIdx < setlist.notes.length - 1) {
+      currentIdx += 1;
+    } else if (direction === "right" && currentIdx > 0) {
+      currentIdx -= 1;
+    }
+    labelOffset = 0;
+    const itemId = (setlist.notes[currentIdx] as NoteWithItemId)?._itemId;
+    if (itemId) {
+      document
+        .querySelector(`[data-item-id="${itemId}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  function handleSongCancel() {
+    labelOffset = 0;
+  }
 
   type NoteWithItemId = Note & { _itemId: string };
 
@@ -166,6 +197,7 @@
           {@const itemId = (note as NoteWithItemId)._itemId}
           <!-- Phones: song info on top, controls on their own full-width row. -->
           <div
+            data-item-id={itemId}
             class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-border bg-card px-3 py-2.5 sm:flex-nowrap sm:px-4 sm:py-3 {i === currentIdx
               ? 'ring-2 ring-primary'
               : ''}"
@@ -233,7 +265,16 @@
       </div>
 
       <!-- Prev / Next navigator -->
-      <div class="flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/30 px-2 py-2.5 sm:px-5 sm:py-3">
+      <div
+        use:swipeHorizontal={{
+          directions: "both",
+          enabled: () => isTouch.current,
+          onDragMove: handleSongDragMove,
+          onCommit: handleSongCommit,
+          onCancel: handleSongCancel,
+        }}
+        class="flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/30 px-2 py-2.5 sm:px-5 sm:py-3"
+      >
         <Button
           variant="ghost"
           size="sm"
@@ -245,7 +286,10 @@
           <ChevronLeft />
           <span class="hidden sm:inline">Previous</span>
         </Button>
-        <div class="min-w-0 text-center">
+        <div
+          class="min-w-0 text-center transition-transform duration-150"
+          style="transform: translateX({labelOffset}px)"
+        >
           <p class="truncate text-sm font-medium">{setlist.notes[currentIdx]?.title ?? ""}</p>
           <p class="text-xs text-muted-foreground">
             {currentIdx + 1} / {setlist.notes.length}

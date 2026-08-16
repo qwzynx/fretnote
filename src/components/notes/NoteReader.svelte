@@ -257,6 +257,7 @@
       </div>
       <!-- Swipeable strip on phones so the diagrams stay legible. -->
       <div
+        data-no-swipe-nav
         class="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:gap-4 sm:px-0"
       >
         {#each note.chords as c}

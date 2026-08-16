@@ -10,6 +10,8 @@
   import { historyLayer } from "@/lib/overlay-history.svelte";
   import { goto } from "@/lib/nav-stack.svelte";
   import { dragDismiss } from "@/lib/actions/drag-dismiss";
+  import { swipeHorizontal } from "@/lib/actions/swipe-horizontal";
+  import { isTouch } from "@/lib/media.svelte";
   import { recordView } from "@/lib/recent";
   import type { Note } from "@/lib/types";
   import Badge from "@/components/ui/Badge.svelte";
@@ -32,6 +34,26 @@
   let setlistDialogOpen = $state(false);
   /** Phone-only action sheet standing in for the desktop button row. */
   let actionsOpen = $state(false);
+  let mainEl: HTMLElement;
+
+  function handleBackDragMove(dx: number) {
+    if (!mainEl) return;
+    mainEl.style.transition = "none";
+    mainEl.style.transform = `translateX(${Math.max(0, dx)}px)`;
+  }
+
+  function handleBackCommit() {
+    if (!mainEl) return;
+    mainEl.style.transition = "transform 180ms ease-in";
+    mainEl.style.transform = "translateX(100%)";
+    setTimeout(() => window.history.back(), 180);
+  }
+
+  function handleBackCancel() {
+    if (!mainEl) return;
+    mainEl.style.transition = "transform 200ms ease-out";
+    mainEl.style.transform = "translateX(0)";
+  }
 
   historyLayer(() => exportOpen, () => (exportOpen = false));
   const actionsLayer = historyLayer(() => actionsOpen, () => (actionsOpen = false));
@@ -115,7 +137,19 @@
   </main>
 {:else}
   {@const noteId = note.id}
-  <main class="mx-auto w-full max-w-3xl px-4 py-4 sm:py-8">
+  <main
+    bind:this={mainEl}
+    use:swipeHorizontal={{
+      edgeGate: 24,
+      directions: "right",
+      enabled: () => isTouch.current,
+      distanceThreshold: mainEl ? Math.min(140, mainEl.clientWidth * 0.35) : 100,
+      onDragMove: handleBackDragMove,
+      onCommit: handleBackCommit,
+      onCancel: handleBackCancel,
+    }}
+    class="mx-auto w-full max-w-3xl px-4 py-4 sm:py-8"
+  >
     <div class="mb-4 flex items-center justify-between gap-2">
       <Button
         variant="ghost"

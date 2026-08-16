@@ -4,6 +4,7 @@
   import SiteHeader from "@/components/layout/SiteHeader.svelte";
   import SiteFooter from "@/components/layout/SiteFooter.svelte";
   import BottomNav from "@/components/layout/BottomNav.svelte";
+  import SectionSwipe from "@/components/layout/SectionSwipe.svelte";
   import { isPhone } from "@/lib/media.svelte";
   import { Toaster } from "svelte-sonner";
   import FeedPage from "@/pages/FeedPage.svelte";
@@ -79,7 +80,9 @@
   <SiteHeader />
   <!-- Padded on phones so content can always scroll clear of the floating nav. -->
   <div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pb-navbar md:pb-0">
-    <Router {routes} />
+    <SectionSwipe>
+      <Router {routes} />
+    </SectionSwipe>
     <SiteFooter />
   </div>
   <BottomNav />

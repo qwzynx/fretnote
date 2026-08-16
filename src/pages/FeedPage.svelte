@@ -7,6 +7,7 @@
   import type { Note } from "@/lib/types";
   import { getRecentIds } from "@/lib/recent";
   import { goto } from "@/lib/nav-stack.svelte";
+  import { cardActions } from "@/lib/card-actions.svelte";
   import Button from "@/components/ui/Button.svelte";
   import FeedClient from "@/components/feed/FeedClient.svelte";
   import NoteCard from "@/components/notes/NoteCard.svelte";
@@ -17,6 +18,7 @@
   let importing = $state(false);
 
   onMount(async () => {
+    cardActions.openId = null;
     try {
       notes = await listNotes();
     } finally {
@@ -45,6 +47,10 @@
 
   function handleToggleFavorite(id: string, value: boolean) {
     notes = notes.map((n) => (n.id === id ? { ...n, isFavorite: value } : n));
+  }
+
+  function handleDeleteNote(id: string) {
+    notes = notes.filter((n) => n.id !== id);
   }
 
   const recentNotes = $derived(() => {
@@ -117,6 +123,7 @@
       </h2>
       <!-- Full-bleed carousel on phones so cards can peek past the edge. -->
       <div
+        data-no-swipe-nav
         class="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-1"
       >
         {#each recentNotes() as note (note.id)}
@@ -135,7 +142,12 @@
     {#if loading}
       <p class="text-sm text-muted-foreground">Loading…</p>
     {:else}
-      <FeedClient {notes} onToggleFavorite={handleToggleFavorite} bind:query={feedQuery} />
+      <FeedClient
+        {notes}
+        onToggleFavorite={handleToggleFavorite}
+        onDelete={handleDeleteNote}
+        bind:query={feedQuery}
+      />
     {/if}
   </section>
 </main>

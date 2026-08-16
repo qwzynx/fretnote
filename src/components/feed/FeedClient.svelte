@@ -29,10 +29,12 @@
   let {
     notes,
     onToggleFavorite,
+    onDelete,
     query = $bindable(""),
   }: {
     notes: Note[];
     onToggleFavorite?: (id: string, value: boolean) => void;
+    onDelete?: (id: string) => void;
     query?: string;
   } = $props();
 
@@ -145,7 +147,7 @@
     {:else}
       <div class="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         {#each results() as note (note.id)}
-          <NoteCard {note} {onToggleFavorite} />
+          <NoteCard {note} {onToggleFavorite} {onDelete} swipeActions />
         {/each}
       </div>
     {/if}
