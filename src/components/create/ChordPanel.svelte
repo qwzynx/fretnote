@@ -7,7 +7,7 @@
     RotateCcw,
     Check,
   } from "@lucide/svelte";
-  import { detectChord } from "@/lib/music/chord-detect";
+  import { detectChord, UNSET_FRET } from "@/lib/music/chord-detect";
   import { TUNINGS, DEFAULT_TUNING } from "@/lib/music/tunings";
   import { getChordShape } from "@/lib/music/chords";
   import ChordDiagram from "@/components/notes/ChordDiagram.svelte";
@@ -19,7 +19,14 @@
   import Card from "@/components/ui/Card.svelte";
   import { cn } from "@/lib/utils";
 
-  const EMPTY_FRETS: Frets = [-1, -1, -1, -1, -1, -1];
+  const EMPTY_FRETS: Frets = [
+    UNSET_FRET,
+    UNSET_FRET,
+    UNSET_FRET,
+    UNSET_FRET,
+    UNSET_FRET,
+    UNSET_FRET,
+  ];
   const QUICK_CHORDS = ["G", "C", "D", "Em", "Am", "E", "A", "F", "Dm", "G7"];
 
   let {
@@ -135,7 +142,7 @@
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-2">
             <span class="text-xs text-muted-foreground"
-              >Tap frets to name the shape</span
+              >Tap the fretted notes — blank strings are guessed</span
             >
             <Select
               bind:value={tuningId}
@@ -149,6 +156,7 @@
               {frets}
               onChange={(f) => (frets = f)}
               stringNames={tuning.names}
+              allowUnset
             />
           </div>
           <button

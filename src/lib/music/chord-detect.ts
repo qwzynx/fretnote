@@ -26,19 +26,21 @@ export interface ChordMatch {
   root: number;
 }
 
+/** A string whose state the player hasn't decided yet — guessed open or muted. */
+export const UNSET_FRET = -2;
+
+type Frets = [number, number, number, number, number, number];
+
+interface Scored {
+  name: string | null;
+  score: number;
+}
+
 /**
- * Given 6 fret values (-1=muted, 0=open, n=fret) and a tuning, return the
- * best-matching chord name or null if fewer than 3 distinct pitches sound.
- *
- * Scoring: every note the player sounds should be explained by the chord
- * (extra notes are penalised heavily), and every note the chord names should
- * be present. Among candidates that fit, the simplest formula wins, with a
- * bonus when the chord root is also the lowest-sounding (bass) note.
+ * Score one fully-resolved fretting (-1=muted, 0=open, n=fret; no UNSET_FRET
+ * left) against every chord formula, the same way the module doc describes.
  */
-export function detectChord(
-  frets: [number, number, number, number, number, number],
-  tuning: Tuning
-): string | null {
+function scoreFrets(frets: Frets, tuning: Tuning): Scored {
   const played = new Set<number>();
   let lowestMidi = Infinity;
   let bassPc = -1;
@@ -56,14 +58,16 @@ export function detectChord(
   // Two notes can only ever be a power chord; require a real triad+.
   if (played.size < 3) {
     if (played.size === 2) {
-      // Handle explicit power chords (root + fifth).
+      // Handle explicit power chords (root + fifth). Ranked below any real
+      // triad+ match so a guessable full chord always wins over settling for
+      // the bare two notes.
       for (let root = 0; root < 12; root++) {
-        if (played.has(root) && played.has((root + 7) % 12) && played.size === 2) {
-          return NOTE_NAMES[root === bassPc ? root : bassPc] + "5";
+        if (played.has(root) && played.has((root + 7) % 12)) {
+          return { name: NOTE_NAMES[root === bassPc ? root : bassPc] + "5", score: -10 };
         }
       }
     }
-    return null;
+    return { name: null, score: -Infinity };
   }
 
   let bestName: string | null = null;
@@ -98,6 +102,57 @@ export function detectChord(
         bestScore = score;
         bestName = NOTE_NAMES[root] + quality;
       }
+    }
+  }
+
+  return { name: bestName, score: bestScore };
+}
+
+/**
+ * Given 6 fret values (-1=muted, 0=open, n=fret, UNSET_FRET=not decided yet)
+ * and a tuning, return the best-matching chord name or null if nothing fits.
+ *
+ * Strings left at UNSET_FRET aren't assumed muted: every open/muted
+ * combination for them is tried, and whichever combination produces the
+ * best-scoring chord (see `scoreFrets`) wins — so fretting just the notes of
+ * Em (022000, with the open strings left untouched) is enough to guess "Em"
+ * without the player also having to mark every open string by hand. Ties
+ * prefer guessing fewer strings open. A player who wants a specific string
+ * muted can still say so explicitly, which removes it from the guessing.
+ */
+export function detectChord(frets: Frets, tuning: Tuning): string | null {
+  // Nothing fretted yet — there's nothing to guess a chord from.
+  if (!frets.some((f) => f > 0)) return null;
+
+  const unsetIdx: number[] = [];
+  frets.forEach((f, i) => {
+    if (f === UNSET_FRET) unsetIdx.push(i);
+  });
+
+  if (unsetIdx.length === 0) {
+    return scoreFrets(frets, tuning).name;
+  }
+
+  let bestName: string | null = null;
+  let bestScore = -Infinity;
+  let bestGuesses = Infinity;
+
+  const combos = 1 << unsetIdx.length;
+  for (let mask = 0; mask < combos; mask++) {
+    const resolved = [...frets] as Frets;
+    let guesses = 0;
+    unsetIdx.forEach((idx, bit) => {
+      const open = (mask & (1 << bit)) !== 0;
+      resolved[idx] = open ? 0 : -1;
+      if (open) guesses++;
+    });
+
+    const { name, score } = scoreFrets(resolved, tuning);
+    if (name === null) continue;
+    if (score > bestScore || (score === bestScore && guesses < bestGuesses)) {
+      bestScore = score;
+      bestGuesses = guesses;
+      bestName = name;
     }
   }
 

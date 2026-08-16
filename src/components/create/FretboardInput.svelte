@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fingerShape } from "@/lib/music/fingering";
+  import { UNSET_FRET } from "@/lib/music/chord-detect";
   import { cn } from "@/lib/utils";
 
   export type Frets = [number, number, number, number, number, number];
@@ -11,11 +12,21 @@
     onChange,
     stringNames,
     fretCount = 5,
+    allowUnset = false,
   }: {
     frets: Frets;
     onChange: (frets: Frets) => void;
     stringNames: readonly string[];
     fretCount?: number;
+    /**
+     * When true, a string starts "not decided" instead of muted, and the
+     * open/muted marker cycles through that third state. Only meaningful for
+     * callers (like the chord finder) that hand UNSET_FRET strings on to
+     * `detectChord`, which guesses them open or muted itself — a hand shape
+     * that gets saved verbatim (e.g. the tab fingering picker) should stay
+     * off this so every string always resolves to a concrete state.
+     */
+    allowUnset?: boolean;
   } = $props();
 
   function setString(strIdx: number, value: number) {
@@ -50,27 +61,38 @@
   <div class="flex pb-1">
     {#each STRING_ORDER as s}
       {@const val = frets[s]}
+      {@const isUnset = allowUnset && val === UNSET_FRET}
       {@const isMuted = val === -1}
       {@const isOpen = val === 0}
       <div class={cn(col, "flex justify-center")}>
         <button
           type="button"
-          onclick={() => setString(s, isMuted ? 0 : -1)}
-          title={isMuted
-            ? "Muted — click to open"
-            : isOpen
-              ? "Open — click to mute"
-              : "Click to mute"}
+          onclick={() =>
+            setString(
+              s,
+              isUnset ? 0 : isOpen ? -1 : isMuted && allowUnset ? UNSET_FRET : -1
+            )}
+          title={isUnset
+            ? "Not set — guessed open or muted; click to force open"
+            : isMuted
+              ? allowUnset
+                ? "Muted — click to leave unset"
+                : "Muted — click to open"
+              : isOpen
+                ? "Open — click to mute"
+                : "Click to mute"}
           class={cn(
             "flex size-7 items-center justify-center rounded-full border text-3xs font-bold transition-colors sm:size-5",
-            isMuted
-              ? "border-muted-foreground/60 text-muted-foreground"
-              : isOpen
-                ? "border-foreground/60 text-foreground"
-                : "border-border text-muted-foreground/30 hover:border-muted-foreground/50"
+            isUnset
+              ? "border-dashed border-muted-foreground/40 text-muted-foreground/40"
+              : isMuted
+                ? "border-muted-foreground/60 text-muted-foreground"
+                : isOpen
+                  ? "border-foreground/60 text-foreground"
+                  : "border-border text-muted-foreground/30 hover:border-muted-foreground/50"
           )}
         >
-          {isMuted ? "✕" : "○"}
+          {isUnset ? "" : isMuted ? "✕" : "○"}
         </button>
       </div>
     {/each}
@@ -113,7 +135,7 @@
           {@const active = val === f}
           <button
             type="button"
-            onclick={() => setString(s, active ? 0 : f)}
+            onclick={() => setString(s, active ? (allowUnset ? UNSET_FRET : 0) : f)}
             aria-label={`String ${stringNames[s]}, fret ${f}${active ? " (active, click to clear)" : ""}`}
             class={cn(
               col,
