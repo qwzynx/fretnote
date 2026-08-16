@@ -55,9 +55,13 @@
         </div>
         {#if block}
           {#if block.hint}
-            <TabHintView hint={block.hint} {stringNames} class="mb-3" />
+            <div class="flex flex-wrap items-start gap-3 sm:flex-nowrap">
+              <TabHintView hint={block.hint} {stringNames} />
+              <TabView tab={block.columns} {fontSize} class="min-w-0 flex-1" />
+            </div>
+          {:else}
+            <TabView tab={block.columns} {fontSize} />
           {/if}
-          <TabView tab={block.columns} {fontSize} />
         {:else}
           <div
             class="rounded-lg border border-dashed border-border bg-card/40 px-3 py-2 text-sm text-muted-foreground"

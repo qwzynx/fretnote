@@ -198,9 +198,13 @@
                   </p>
                 {/if}
                 {#if block.hint}
-                  <TabHintView hint={block.hint} {stringNames} class="mb-3" />
+                  <div class="flex flex-wrap items-start gap-3 sm:flex-nowrap">
+                    <TabHintView hint={block.hint} {stringNames} />
+                    <TabView tab={block.columns} {fontSize} class="min-w-0 flex-1" />
+                  </div>
+                {:else}
+                  <TabView tab={block.columns} {fontSize} />
                 {/if}
-                <TabView tab={block.columns} {fontSize} />
               </div>
             {/each}
           </div>
