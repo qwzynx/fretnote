@@ -24,7 +24,6 @@
   import TabView from "./TabView.svelte";
   import TabHintView from "./TabHintView.svelte";
   import StrummingPreview from "@/components/create/StrummingPreview.svelte";
-  import Metronome from "./Metronome.svelte";
 
   const MIN_FONT = 12;
   const MAX_FONT = 26;
@@ -256,30 +255,18 @@
         <ChevronDown class="size-4" />
         Chords in this note
       </div>
-      {#if detailed}
-        <!-- Swipeable strip on phones so the diagrams stay legible. -->
-        <div
-          class="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:gap-4 sm:px-0"
-        >
-          {#each note.chords as c}
-            <ChordDiagram
-              name={transposeKey(c, note.type === "chords" ? transpose : 0)}
-              class="w-[4.5rem] shrink-0 sm:w-20"
-            />
-          {/each}
-        </div>
-        <FingerLegend class="mt-2.5" />
-      {:else}
-        <div class="flex flex-wrap gap-1.5">
-          {#each note.chords as c}
-            <span
-              class="rounded-md border border-border bg-card/60 px-2 py-1 font-mono text-sm text-foreground"
-            >
-              {transposeKey(c, note.type === "chords" ? transpose : 0)}
-            </span>
-          {/each}
-        </div>
-      {/if}
+      <!-- Swipeable strip on phones so the diagrams stay legible. -->
+      <div
+        class="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:gap-4 sm:px-0"
+      >
+        {#each note.chords as c}
+          <ChordDiagram
+            name={transposeKey(c, note.type === "chords" ? transpose : 0)}
+            class="w-[4.5rem] shrink-0 sm:w-20"
+          />
+        {/each}
+      </div>
+      <FingerLegend class="mt-2.5" />
     </div>
   {/if}
 
@@ -294,23 +281,7 @@
           {note.bpm} BPM
         </p>
       {/if}
-      {#if detailed}
-        <StrummingPreview pattern={note.strummingPattern as StrokeType[]} />
-      {/if}
-    </div>
-  {/if}
-
-  <!-- Metronome -->
-  {#if note.bpm}
-    <div class="mb-6 rounded-lg border border-border bg-muted/20 p-4">
-      <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Metronome
-      </p>
-      {#if detailed}
-        <Metronome bpm={note.bpm} />
-      {:else}
-        <span class="font-mono text-sm font-semibold">{note.bpm} BPM</span>
-      {/if}
+      <StrummingPreview pattern={note.strummingPattern as StrokeType[]} />
     </div>
   {/if}
 

@@ -105,7 +105,7 @@
                     {/snippet}
                   </Popover>
                 {/if}
-              {:else if seg.strum}
+              {:else if seg.strum && detailed}
                 {@const info = STROKE_DISPLAY[seg.strum]}
                 <span
                   class={cn("px-0.5 font-bold", info.className)}
