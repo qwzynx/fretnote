@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { push } from "svelte-spa-router";
   import Router from "svelte-spa-router";
   import SiteHeader from "@/components/layout/SiteHeader.svelte";
   import SiteFooter from "@/components/layout/SiteFooter.svelte";
@@ -15,8 +14,8 @@
   import SetlistPage from "@/pages/SetlistPage.svelte";
   import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp.svelte";
   import SearchPalette from "@/components/SearchPalette.svelte";
-  import { searchOpenStore } from "@/lib/search-open.svelte";
   import { initOverlayHistory, closeTopLayer } from "@/lib/overlay-history.svelte";
+  import { initNavStack, goto, toggleSearch } from "@/lib/nav-stack.svelte";
 
   const routes = {
     "/": FeedPage,
@@ -40,13 +39,13 @@
 
     if (ctrl && e.key === "n") {
       e.preventDefault();
-      push("/create");
+      goto("/create");
       return;
     }
 
     if (ctrl && e.key === "k") {
       e.preventDefault();
-      searchOpenStore.toggle();
+      toggleSearch();
       return;
     }
 
@@ -67,9 +66,11 @@
   onMount(() => {
     window.addEventListener("keydown", handleGlobalKey);
     const cleanupOverlayHistory = initOverlayHistory();
+    const cleanupNavStack = initNavStack();
     return () => {
       window.removeEventListener("keydown", handleGlobalKey);
       cleanupOverlayHistory();
+      cleanupNavStack();
     };
   });
 </script>

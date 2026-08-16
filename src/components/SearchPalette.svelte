@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { onMount, tick } from "svelte";
-  import { push } from "svelte-spa-router";
+  import { tick } from "svelte";
   import { Guitar, Music4, Search, X } from "@lucide/svelte";
   import { listNotes } from "@/lib/db";
   import type { Note } from "@/lib/types";
   import { searchOpenStore } from "@/lib/search-open.svelte";
-  import { historyLayer } from "@/lib/overlay-history.svelte";
+  import { closeSearch, goto } from "@/lib/nav-stack.svelte";
   import { dragDismiss } from "@/lib/actions/drag-dismiss";
   import { isPhone } from "@/lib/media.svelte";
 
@@ -39,13 +38,11 @@
   });
 
   function close() {
-    searchOpenStore.hide();
+    closeSearch();
   }
 
-  const layer = historyLayer(() => searchOpenStore.open, close);
-
   function openNote(note: Note) {
-    layer.dismiss(() => push(`/notes/${note.id}`));
+    goto(`/notes/${note.id}`);
   }
 
   function handleKeydown(e: KeyboardEvent) {

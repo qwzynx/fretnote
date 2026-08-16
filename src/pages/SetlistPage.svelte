@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { push } from "svelte-spa-router";
   import { toast } from "svelte-sonner";
   import {
     ArrowLeft,
@@ -23,6 +22,7 @@
     moveSetlistItem,
   } from "@/lib/setlists";
   import type { SetlistWithNotes, Note } from "@/lib/types";
+  import { goto } from "@/lib/nav-stack.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Input from "@/components/ui/Input.svelte";
   import Separator from "@/components/ui/Separator.svelte";
@@ -54,7 +54,7 @@
     if (!setlist) return;
     if (!confirm(`Delete setlist "${setlist.title}"?`)) return;
     await deleteSetlist(setlist.id);
-    push("/setlists");
+    goto("/setlists");
   }
 
   async function handleRemoveNote(itemId: string) {
@@ -79,14 +79,28 @@
 {:else if setlist === null}
   <main class="mx-auto w-full max-w-3xl px-4 py-8">
     <p class="text-sm text-muted-foreground">Setlist not found.</p>
-    <Button variant="ghost" size="sm" class="mt-4" href="#/setlists">Back</Button>
+    <Button
+      variant="ghost"
+      size="sm"
+      class="mt-4"
+      href="#/setlists"
+      onclick={(e: MouseEvent) => goto("/setlists", e)}
+    >
+      Back
+    </Button>
   </main>
 {:else}
   <main class="mx-auto w-full max-w-3xl px-4 py-4 sm:py-8">
     <!-- Header -->
     <div class="mb-5 flex items-start justify-between gap-4 sm:mb-6">
       <div class="flex items-center gap-2">
-        <Button variant="ghost" size="sm" class="-ml-2 text-muted-foreground" href="#/setlists">
+        <Button
+          variant="ghost"
+          size="sm"
+          class="-ml-2 text-muted-foreground"
+          href="#/setlists"
+          onclick={(e: MouseEvent) => goto("/setlists", e)}
+        >
           <ArrowLeft />
           Setlists
         </Button>
@@ -168,7 +182,11 @@
               {/if}
             </span>
 
-            <a href={`#/notes/${note.id}`} class="min-w-0 flex-1 outline-none">
+            <a
+              href={`#/notes/${note.id}`}
+              onclick={(e) => goto(`/notes/${note.id}`, e)}
+              class="min-w-0 flex-1 outline-none"
+            >
               <p class="truncate font-medium">{note.title}</p>
               <p class="truncate text-xs text-muted-foreground">{note.artist}</p>
             </a>
@@ -196,6 +214,7 @@
               </button>
               <a
                 href={`#/notes/${note.id}`}
+                onclick={(e) => goto(`/notes/${note.id}`, e)}
                 class="ml-auto flex h-9 items-center rounded-md px-3 text-sm font-medium text-primary hover:bg-primary/10 sm:ml-0 sm:h-7 sm:text-xs"
               >
                 Open
@@ -245,9 +264,11 @@
         </Button>
       </div>
 
+      {@const currentNoteId = setlist.notes[currentIdx]?.id}
       <div class="mt-3 text-center">
         <a
-          href={`#/notes/${setlist.notes[currentIdx]?.id}`}
+          href={`#/notes/${currentNoteId}`}
+          onclick={(e) => goto(`/notes/${currentNoteId}`, e)}
           class="text-sm font-medium text-primary hover:underline"
         >
           Open "{setlist.notes[currentIdx]?.title}"

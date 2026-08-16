@@ -4,6 +4,7 @@
   import { toast } from "svelte-sonner";
   import { listSetlists, createSetlist, deleteSetlist } from "@/lib/setlists";
   import type { Setlist } from "@/lib/types";
+  import { goto } from "@/lib/nav-stack.svelte";
   import Button from "@/components/ui/Button.svelte";
   import Input from "@/components/ui/Input.svelte";
   import Label from "@/components/ui/Label.svelte";
@@ -122,7 +123,11 @@
     <div class="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
       {#each setlists as s (s.id)}
         <Card class="group/sl gap-0 py-0 hover:ring-primary/40">
-          <a href={`#/setlists/${s.id}`} class="outline-none">
+          <a
+            href={`#/setlists/${s.id}`}
+            onclick={(e) => goto(`/setlists/${s.id}`, e)}
+            class="outline-none"
+          >
             <CardContent class="flex flex-col gap-2 px-4 py-4">
               <div class="flex items-start justify-between gap-2">
                 <span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

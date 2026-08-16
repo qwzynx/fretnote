@@ -13,6 +13,16 @@ interface Layer {
 let layers: Layer[] = [];
 let suppressed = 0;
 const pendingAfterPop: Array<() => void> = [];
+let fallback: (() => void) | null = null;
+
+/**
+ * Registers a callback for popstate events that aren't consumed by any
+ * dialog layer — used by the nav-stack module so a single listener decides,
+ * per event, whether a dialog or the reduced route hierarchy reacts.
+ */
+export function setPopstateFallback(fn: (() => void) | null) {
+  fallback = fn;
+}
 
 function handlePopState() {
   if (suppressed > 0) {
@@ -24,7 +34,9 @@ function handlePopState() {
   if (layer) {
     layer.popped = true;
     layer.close();
+    return;
   }
+  fallback?.();
 }
 
 /** Call once, near app start. Returns a cleanup function. */

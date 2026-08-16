@@ -3,7 +3,7 @@
   import { Guitar, Home, ListMusic, PlusCircle, Search, Settings } from "@lucide/svelte";
   import Button from "@/components/ui/Button.svelte";
   import { cn } from "@/lib/utils";
-  import { searchOpenStore } from "@/lib/search-open.svelte";
+  import { goto, openSearch } from "@/lib/nav-stack.svelte";
 
   const NAV = [
     { href: "/", label: "Notes", icon: Home },
@@ -16,7 +16,7 @@
   class="sticky top-0 z-40 border-b border-border/80 bg-background pt-[env(safe-area-inset-top,0px)]"
 >
   <div class="mx-auto flex h-12 w-full max-w-6xl items-center gap-4 px-4 sm:h-14">
-    <a href="#/" class="flex items-center gap-2 font-heading">
+    <a href="#/" onclick={(e) => goto("/", e)} class="flex items-center gap-2 font-heading">
       <span
         class="flex size-7 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25 sm:size-8"
       >
@@ -35,6 +35,7 @@
             : router.location.startsWith(item.href)}
         <a
           href={`#${item.href}`}
+          onclick={(e) => goto(item.href, e)}
           class={cn(
             "inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-2xs font-medium transition-colors",
             active
@@ -53,17 +54,23 @@
       <Button
         variant="outline"
         size="sm"
-        onclick={() => searchOpenStore.show()}
+        onclick={() => openSearch()}
         class="text-muted-foreground"
       >
         <Search />
         Search notes
         <kbd class="ml-1 rounded border border-border bg-muted px-1 font-mono text-kbd">⌘K</kbd>
       </Button>
-      <Button variant="ghost" size="icon-sm" href="#/settings" aria-label="Settings">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        href="#/settings"
+        onclick={(e: MouseEvent) => goto("/settings", e)}
+        aria-label="Settings"
+      >
         <Settings class="size-4" />
       </Button>
-      <Button size="sm" href="#/create">
+      <Button size="sm" href="#/create" onclick={(e: MouseEvent) => goto("/create", e)}>
         <PlusCircle />
         New note
       </Button>

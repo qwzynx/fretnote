@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { push } from "svelte-spa-router";
   import { ArrowLeft, ChevronDown, Copy, Download, Guitar, Heart, ListMusic, MoreHorizontal, Music4, Pencil, Printer, Trash2, X } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import { getNote, deleteNote, toggleFavorite } from "@/lib/db";
@@ -9,6 +8,7 @@
   import { exportNote } from "@/lib/backup";
   import AddToSetlistDialog from "@/components/ui/AddToSetlistDialog.svelte";
   import { historyLayer } from "@/lib/overlay-history.svelte";
+  import { goto } from "@/lib/nav-stack.svelte";
   import { dragDismiss } from "@/lib/actions/drag-dismiss";
   import { recordView } from "@/lib/recent";
   import type { Note } from "@/lib/types";
@@ -96,7 +96,7 @@
     actionsOpen = false;
     if (!confirm(`Delete "${note.title}"? This cannot be undone.`)) return;
     await deleteNote(note.id);
-    push("/");
+    goto("/");
   }
 </script>
 
@@ -109,11 +109,12 @@
 {:else if note === null}
   <main class="mx-auto w-full max-w-3xl px-4 py-8">
     <p class="text-sm text-muted-foreground">Note not found.</p>
-    <Button variant="ghost" size="sm" class="mt-4" href="#/">
+    <Button variant="ghost" size="sm" class="mt-4" href="#/" onclick={(e: MouseEvent) => goto("/", e)}>
       Back to notes
     </Button>
   </main>
 {:else}
+  {@const noteId = note.id}
   <main class="mx-auto w-full max-w-3xl px-4 py-4 sm:py-8">
     <div class="mb-4 flex items-center justify-between gap-2">
       <Button
@@ -121,6 +122,7 @@
         size="sm"
         class="-ml-2 text-muted-foreground"
         href="#/"
+        onclick={(e: MouseEvent) => goto("/", e)}
         aria-label="Back to notes"
       >
         <ArrowLeft />
@@ -205,7 +207,12 @@
               </div>
             {/if}
           </div>
-          <Button variant="outline" size="sm" href={`#/notes/${note.id}/edit`}>
+          <Button
+            variant="outline"
+            size="sm"
+            href={`#/notes/${noteId}/edit`}
+            onclick={(e: MouseEvent) => goto(`/notes/${noteId}/edit`, e)}
+          >
             <Pencil />
             Edit
           </Button>
@@ -312,7 +319,7 @@
         <button
           type="button"
           class={sheetItem}
-          onclick={() => actionsLayer.dismiss(() => push(`/notes/${noteId}/edit`))}
+          onclick={() => actionsLayer.dismiss(() => goto(`/notes/${noteId}/edit`))}
         >
           <Pencil class="size-5 text-muted-foreground" />
           Edit note

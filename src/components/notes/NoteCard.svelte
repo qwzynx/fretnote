@@ -2,6 +2,7 @@
   import { Guitar, Heart, Music4 } from "@lucide/svelte";
   import { toggleFavorite } from "@/lib/db";
   import type { Note } from "@/lib/types";
+  import { goto } from "@/lib/nav-stack.svelte";
   import Card from "@/components/ui/Card.svelte";
   import CardContent from "@/components/ui/CardContent.svelte";
   import CardFooter from "@/components/ui/CardFooter.svelte";
@@ -34,7 +35,11 @@
 </script>
 
 <Card class="group/note gap-0 py-0 hover:ring-primary/40">
-  <a href={`#/notes/${note.id}`} class="outline-none">
+  <a
+    href={`#/notes/${note.id}`}
+    onclick={(e) => goto(`/notes/${note.id}`, e)}
+    class="outline-none"
+  >
     <CardContent class="flex flex-col gap-2.5 px-4 py-3.5 sm:gap-3 sm:py-4">
       <div class="flex items-center justify-between">
         <Badge variant="outline" class="gap-1 border-primary/30 text-primary">

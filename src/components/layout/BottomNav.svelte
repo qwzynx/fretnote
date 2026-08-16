@@ -2,7 +2,7 @@
   import { router } from "svelte-spa-router";
   import { Home, ListMusic, Plus, Search, Settings } from "@lucide/svelte";
   import { cn } from "@/lib/utils";
-  import { searchOpenStore } from "@/lib/search-open.svelte";
+  import { goto, openSearch } from "@/lib/nav-stack.svelte";
 
   const ITEMS = [
     { href: "/", label: "Notes", icon: Home },
@@ -32,6 +32,7 @@
       {@const active = isActive(item.href)}
       <a
         href={`#${item.href}`}
+        onclick={(e) => goto(item.href, e)}
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
         class={cn(
@@ -47,6 +48,7 @@
 
     <a
       href="#/create"
+      onclick={(e) => goto("/create", e)}
       aria-label="New note"
       class="mx-0.5 flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md shadow-primary/25 transition-transform active:scale-95"
     >
@@ -55,7 +57,7 @@
 
     <button
       type="button"
-      onclick={() => searchOpenStore.show()}
+      onclick={() => openSearch()}
       aria-label="Search notes"
       class="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors active:bg-muted"
     >
@@ -66,6 +68,7 @@
       {@const active = isActive(item.href)}
       <a
         href={`#${item.href}`}
+        onclick={(e) => goto(item.href, e)}
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
         class={cn(

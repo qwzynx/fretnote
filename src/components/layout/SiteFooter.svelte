@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Guitar } from "@lucide/svelte";
+  import { goto } from "@/lib/nav-stack.svelte";
 </script>
 
 <!-- Phones get the bottom pill nav instead; this footer would only steal room. -->
@@ -17,8 +18,8 @@
     <nav
       class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground"
     >
-      <a href="#/" class="hover:text-foreground">Notes</a>
-      <a href="#/create" class="hover:text-foreground">Create</a>
+      <a href="#/" onclick={(e) => goto("/", e)} class="hover:text-foreground">Notes</a>
+      <a href="#/create" onclick={(e) => goto("/create", e)} class="hover:text-foreground">Create</a>
     </nav>
   </div>
 </footer>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { push } from "svelte-spa-router";
   import { toast } from "svelte-sonner";
+  import { goto } from "@/lib/nav-stack.svelte";
   import { Music4, Guitar, Wand2, AudioWaveform, Plus, FileText, Loader2 } from "@lucide/svelte";
 
   import type { TabBlock, TabColumn } from "@/lib/types";
@@ -236,11 +236,11 @@
       if (editId) {
         await updateNote(editId, input);
         toast.success("Note updated");
-        push(`/notes/${editId}`);
+        goto(`/notes/${editId}`);
       } else {
         const note = await createNote(input);
         toast.success("Note saved");
-        push(`/notes/${note.id}`);
+        goto(`/notes/${note.id}`);
       }
     } catch (err) {
       toast.error("Failed to save note");

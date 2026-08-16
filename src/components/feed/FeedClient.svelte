@@ -6,6 +6,7 @@
   import Select from "@/components/ui/Select.svelte";
   import NoteCard from "@/components/notes/NoteCard.svelte";
   import { cn } from "@/lib/utils";
+  import { goto } from "@/lib/nav-stack.svelte";
 
   import { Heart } from "@lucide/svelte";
 
@@ -66,7 +67,7 @@
 {#if notes.length === 0}
   <div class="rounded-xl border border-dashed border-border px-4 py-14 text-center sm:py-20">
     <p class="text-sm text-muted-foreground">No notes yet. Create your first one!</p>
-    <Button size="sm" class="mt-4" href="#/create">
+    <Button size="sm" class="mt-4" href="#/create" onclick={(e: MouseEvent) => goto("/create", e)}>
       <PlusCircle />
       Create a note
     </Button>

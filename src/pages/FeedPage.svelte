@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { push } from "svelte-spa-router";
   import { Clock, PlusCircle, Sparkles, Upload } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import { listNotes } from "@/lib/db";
   import { importNote } from "@/lib/backup";
   import type { Note } from "@/lib/types";
   import { getRecentIds } from "@/lib/recent";
+  import { goto } from "@/lib/nav-stack.svelte";
   import Button from "@/components/ui/Button.svelte";
   import FeedClient from "@/components/feed/FeedClient.svelte";
   import NoteCard from "@/components/notes/NoteCard.svelte";
@@ -30,7 +30,7 @@
       const imported = await importNote();
       if (imported) {
         toast.success(`Imported "${imported.title}"`);
-        push(`/notes/${imported.id}`);
+        goto(`/notes/${imported.id}`);
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Import failed");
@@ -77,7 +77,12 @@
         voice — all saved locally on your device.
       </p>
       <div class="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:gap-3">
-        <Button size="lg" href="#/create" class="flex-1 sm:flex-none">
+        <Button
+          size="lg"
+          href="#/create"
+          onclick={(e: MouseEvent) => goto("/create", e)}
+          class="flex-1 sm:flex-none"
+        >
           <PlusCircle />
           Create a note
         </Button>
