@@ -4,7 +4,7 @@
   import { goto } from "@/lib/nav-stack.svelte";
   import { Music4, Guitar, Wand2, AudioWaveform, Plus, FileText, Loader2 } from "@lucide/svelte";
 
-  import type { TabBlock, TabColumn } from "@/lib/types";
+  import type { NoteType, TabBlock, TabColumn } from "@/lib/types";
   import { createNote, updateNote, getNote } from "@/lib/db";
   import { fetchLyrics } from "@/lib/lyrics";
   import { extractChords } from "@/lib/music/parse";
@@ -40,13 +40,21 @@
 
   const TUNING_ITEMS = TUNINGS.map((t) => ({ value: t.id, label: t.label }));
 
+  const TYPE_ITEMS = [
+    { value: "chords", label: "Chord sheet" },
+    { value: "tab", label: "Tab" },
+  ];
+
   const emptyTabColumns = (): TabColumn[] =>
     Array.from({ length: 8 }, () => ["", "", "", "", "", ""] as TabColumn);
 
-  let tabSeq = 0;
+  // Ids are minted globally unique rather than from a per-form counter. The
+  // counter started at 0 on every mount, so editing a note whose blocks were
+  // already saved as tab-1, tab-2… made the next "Add tab" collide with an
+  // existing id — a duplicate key in the keyed {#each} below, and edits that
+  // landed on two blocks at once.
   function newTabBlock(label = ""): TabBlock {
-    tabSeq += 1;
-    return { id: `tab-${tabSeq}`, label, columns: emptyTabColumns() };
+    return { id: crypto.randomUUID(), label, columns: emptyTabColumns() };
   }
 
   const tabBlockFilled = (b: TabBlock) =>
@@ -69,6 +77,14 @@
   let chordSheet = $state("");
   let tabBlocks = $state<TabBlock[]>([newTabBlock("Intro")]);
   let tuningId = $state(DEFAULT_TUNING.id);
+  /**
+   * Chosen, not inferred. This used to be derived from "are there lyrics?" at
+   * save time, so clearing the lyrics field silently turned a chord sheet
+   * into a tab note and took the reader's transpose controls with it.
+   */
+  let noteType = $state<NoteType>("chords");
+  /** `true` once an edit target has been confirmed missing. */
+  let notFound = $state(false);
   let manualChords = $state<string[]>([]);
   let pattern = $state<StrokeType[]>(emptyPattern());
   let bpm = $state<number | undefined>(undefined);
@@ -84,7 +100,8 @@
     () => (mobilePane = "edit")
   );
 
-  let textareaEl: HTMLTextAreaElement;
+  // Bound inside a branch now, so it can legitimately be unset.
+  let textareaEl = $state<HTMLTextAreaElement | undefined>(undefined);
 
   const tuning = $derived(TUNINGS.find((t) => t.id === tuningId) ?? DEFAULT_TUNING);
 
@@ -98,18 +115,28 @@
   let previewTabBlocks = $state<TabBlock[]>([]);
   let previewPattern = $state<StrokeType[]>(emptyPattern());
 
+  /**
+   * Trailing debounce rather than one rAF per change. A frame-coalesced
+   * update still re-parsed the whole document up to 60x a second while
+   * typing — extractChords over the full sheet, a transpose + parse pass, a
+   * complete preview DOM rebuild, and a chord-shape lookup per chord. At
+   * this delay a burst of typing costs one pass instead of dozens, and the
+   * preview still lands well inside the time it takes to look up at it.
+   */
+  const PREVIEW_DEBOUNCE_MS = 180;
+
   $effect(() => {
     const s = chordSheet;
     const c = allChords;
     const t = tabBlocks;
     const p = pattern;
-    const raf = requestAnimationFrame(() => {
+    const timer = setTimeout(() => {
       previewSheet = s;
       previewChords = c;
       previewTabBlocks = t;
       previewPattern = p;
-    });
-    return () => cancelAnimationFrame(raf);
+    }, PREVIEW_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
   });
 
   function handleFormKey(e: KeyboardEvent) {
@@ -128,13 +155,29 @@
       tuningId = s.defaultTuning;
       return;
     }
-    const note = await getNote(editId);
-    if (!note) return;
+    let note;
+    try {
+      note = await getNote(editId);
+    } catch (err) {
+      console.error(err);
+      toast.error("Couldn't open that note.");
+      notFound = true;
+      return;
+    }
+    // Bailing quietly here left a blank form that, on save, updated zero rows
+    // and still reported "Note updated" before navigating to a note that
+    // doesn't exist.
+    if (!note) {
+      notFound = true;
+      return;
+    }
     title = note.title;
     artist = note.artist;
     key = note.key;
     capo = note.capo;
     difficulty = note.difficulty;
+    noteType = note.type;
+    tuningId = note.tuning || DEFAULT_TUNING.id;
     chordSheet = note.chordSheet ?? "";
     if (note.tabBlocks?.length) tabBlocks = note.tabBlocks;
     manualChords = note.chords;
@@ -171,6 +214,8 @@
     const next = chordSheet.slice(0, start) + text + chordSheet.slice(end);
     chordSheet = next;
     requestAnimationFrame(() => {
+      // The element can go away between scheduling and the frame firing.
+      if (!textareaEl) return;
       textareaEl.focus();
       const pos = start + text.length;
       textareaEl.setSelectionRange(pos, pos);
@@ -220,21 +265,27 @@
       const filledTabs = tabBlocks.filter(tabBlockFilled);
       const hasSheet = chordSheet.trim().length > 0;
       const input = {
-        type: (hasSheet ? "chords" : "tab") as "chords" | "tab",
+        type: noteType,
         title: title.trim(),
         artist: artist.trim(),
         key,
         capo,
         difficulty: difficulty as "beginner" | "intermediate" | "advanced",
         tags,
+        tuning: tuningId,
         chordSheet: hasSheet ? chordSheet : undefined,
         tabBlocks: filledTabs.length ? filledTabs : undefined,
         chords: allChords,
         strummingPattern: pattern.some((s) => s !== "") ? pattern : undefined,
-        bpm,
+        bpm: Number.isFinite(bpm) && (bpm as number) > 0 ? bpm : undefined,
       };
       if (editId) {
-        await updateNote(editId, input);
+        const updated = await updateNote(editId, input);
+        if (!updated) {
+          notFound = true;
+          toast.error("That note no longer exists.");
+          return;
+        }
         toast.success("Note updated");
         goto(`/notes/${editId}`);
       } else {
@@ -252,6 +303,22 @@
 </script>
 
 <svelte:window onkeydown={handleFormKey} />
+
+{#if notFound}
+  <div
+    class="mx-auto flex max-w-md flex-col items-center gap-3 rounded-xl border border-dashed border-border px-4 py-14 text-center"
+  >
+    <FileText class="size-8 text-muted-foreground/40" />
+    <p class="font-medium">That note doesn't exist</p>
+    <p class="text-sm text-muted-foreground">
+      It may have been deleted, or the link may be wrong.
+    </p>
+    <div class="mt-1 flex gap-2">
+      <Button variant="outline" onclick={() => goto("/")}>Back to notes</Button>
+      <Button onclick={() => goto("/create")}>New note</Button>
+    </div>
+  </div>
+{:else}
 
 <!-- ══ Pane switch + save, pinned while the long form scrolls (below lg) ══ -->
 <div
@@ -307,6 +374,11 @@
 
       <div class="flex flex-wrap items-end gap-4">
         <div class="space-y-1.5">
+          <Label>Type</Label>
+          <Select bind:value={noteType} items={TYPE_ITEMS} class="w-32" />
+        </div>
+
+        <div class="space-y-1.5">
           <Label>Key</Label>
           <Select bind:value={key} items={KEY_ITEMS} class="w-24" />
         </div>
@@ -351,7 +423,7 @@
           <Music4 class="size-4" />
         </span>
         <div>
-          <h2 class="font-heading text-base font-semibold leading-tight">Song</h2>
+          <h2 class="text-base font-semibold leading-tight">Song</h2>
           <p class="text-xs text-muted-foreground">
             Chords, lyrics and tabs in one place, in playing order.
           </p>
@@ -448,7 +520,7 @@
           <Guitar class="size-4" />
         </span>
         <div>
-          <h2 class="font-heading text-base font-semibold leading-tight">Tabs</h2>
+          <h2 class="text-base font-semibold leading-tight">Tabs</h2>
           <p class="text-xs text-muted-foreground">
             Define named tabs, then drop each into the song above with "Insert in
             song".
@@ -484,7 +556,7 @@
     <!-- Strumming -->
     <section class="space-y-3">
       <div>
-        <h2 class="font-heading text-base font-semibold">Strumming pattern</h2>
+        <h2 class="text-base font-semibold">Strumming pattern</h2>
         <p class="text-xs text-muted-foreground">
           Build the strum — add bars for longer patterns.
         </p>
@@ -533,18 +605,24 @@
       mobilePane !== "preview" && "hidden"
     )}
   >
-    <NotePreview
-      {title}
-      {artist}
-      songKey={key}
-      {capo}
-      {difficulty}
-      pattern={previewPattern}
-      {bpm}
-      chords={previewChords}
-      sheet={previewSheet}
-      tabBlocks={previewTabBlocks}
-      stringNames={tuning.names}
-    />
+    <!-- Below `lg` the preview is only on screen when its pane is selected.
+         Hiding it with a class still built and re-parsed the whole document
+         on every keystroke for something the phone user could not see. -->
+    {#if !isCompact.current || mobilePane === "preview"}
+      <NotePreview
+        {title}
+        {artist}
+        songKey={key}
+        {capo}
+        {difficulty}
+        pattern={previewPattern}
+        {bpm}
+        chords={previewChords}
+        sheet={previewSheet}
+        tabBlocks={previewTabBlocks}
+        stringNames={tuning.names}
+      />
+    {/if}
   </div>
 </div>
+{/if}

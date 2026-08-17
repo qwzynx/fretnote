@@ -1,59 +1,214 @@
 @import "tailwindcss";
-@import "tw-animate-css";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Fonts — self-hosted.
+
+   These used to come from the Google Fonts CDN via an @import inside an
+   inline <style>, which is the worst of every world for this app: it is
+   render-blocking, it cannot be preloaded, and Fretnote is an offline-first
+   desktop and Android app, so with no network the typeface silently fell
+   back to system-ui and the whole UI changed shape. It also contradicted the
+   app's own promise never to talk to a server.
+   ───────────────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/fonts/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/fonts/inter-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+    U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+    U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+    U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
 
 @custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Palette — "dark studio": charcoal surfaces, warm amber accent.
+
+   Fretnote ships dark only. There is no light palette here because there was
+   never a light *design*: the old :root block was untouched shadcn grey whose
+   --primary was near-black rather than amber, so switching to it would have
+   discarded the app's identity, not just its brightness.
+
+   Surfaces climb in four steps rather than the previous three, which is what
+   lets a popover read as floating above a card instead of sitting flush
+   against it.
+   ───────────────────────────────────────────────────────────────────────── */
+:root,
+.dark {
+  /* Surfaces, darkest to lightest */
+  --background: oklch(0.155 0.006 60); /* app ground */
+  --surface-1: oklch(0.192 0.007 60); /* cards, sticky bars */
+  --surface-2: oklch(0.232 0.008 62); /* popovers, dialogs, dropdowns */
+  --surface-3: oklch(0.275 0.009 62); /* inset wells, hovered rows */
+
+  --foreground: oklch(0.965 0.006 80);
+  --muted-foreground: oklch(0.715 0.018 70);
+  /* For text that must recede further than muted without vanishing. */
+  --subtle-foreground: oklch(0.58 0.014 68);
+
+  --card: var(--surface-1);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface-2);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.78 0.16 68);
+  --primary-foreground: oklch(0.2 0.02 60);
+  --secondary: var(--surface-3);
+  --secondary-foreground: var(--foreground);
+  --muted: var(--surface-2);
+  --accent: oklch(0.3 0.03 65);
+  --accent-foreground: oklch(0.95 0.02 80);
+
+  /* Status. `destructive-foreground` was used by the swipe-tray Delete
+     button but never defined, so that label had no computed colour. */
+  --destructive: oklch(0.58 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+  --success: oklch(0.72 0.15 155);
+  --success-foreground: oklch(0.18 0.03 155);
+  --warning: oklch(0.8 0.15 85);
+  --warning-foreground: oklch(0.2 0.03 85);
+  /* Favourites: previously hardcoded rose-500 in three files, while the
+     swipe tray used a different amber that clashed with --primary. */
+  --favorite: oklch(0.7 0.19 15);
+
+  --border: oklch(1 0 0 / 10%);
+  --border-strong: oklch(1 0 0 / 18%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.78 0.16 68);
+  /* One scrim value, instead of four copies of bg-black/60. */
+  --scrim: oklch(0.08 0.004 60 / 68%);
+
+  --radius: 0.625rem;
+
+  /* ── Elevation ──────────────────────────────────────────────────────────
+     On a dark ground a shadow alone barely reads, so each level pairs a cast
+     shadow with a hairline top highlight. Levels map to intent, not to size:
+     raised = sits on the page, overlay = floats over it, popover = detached. */
+  --shadow-raised: 0 1px 2px oklch(0 0 0 / 30%), 0 1px 0 oklch(1 0 0 / 4%) inset;
+  --shadow-overlay: 0 4px 12px -2px oklch(0 0 0 / 45%),
+    0 2px 4px -2px oklch(0 0 0 / 35%), 0 1px 0 oklch(1 0 0 / 5%) inset;
+  --shadow-popover: 0 12px 32px -8px oklch(0 0 0 / 60%),
+    0 4px 8px -4px oklch(0 0 0 / 40%), 0 1px 0 oklch(1 0 0 / 6%) inset;
+  --shadow-sheet: 0 -8px 40px -8px oklch(0 0 0 / 65%),
+    0 1px 0 oklch(1 0 0 / 6%) inset;
+
+  /* ── Motion ─────────────────────────────────────────────────────────────
+     Durations and easings were scattered magic numbers across five files.
+     `--ease-settle` is the curve the phone section-swipe already used and
+     is by some distance the nicest in the app; it is now the default for
+     anything that comes to rest. */
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --duration-instant: 90ms;
+  --duration-fast: 150ms;
+  --duration-normal: 220ms;
+  --duration-slow: 280ms;
+}
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
-  --font-heading: 'Inter', system-ui, sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-  --text-2xs: 0.8rem;
-  --text-3xs: 0.6875rem;
-  --text-kbd: 0.625rem;
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-favorite: var(--favorite);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-scrim: var(--scrim);
+
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Courier New", monospace;
+
+  --radius-sm: calc(var(--radius) * 0.6); /* 0.375rem — chips, kbd */
+  --radius-md: calc(var(--radius) * 0.8); /* 0.5rem   — icon buttons */
+  --radius-lg: var(--radius); /* 0.625rem — inputs, buttons */
+  --radius-xl: calc(var(--radius) * 1.4); /* 0.875rem — cards */
+  --radius-2xl: calc(var(--radius) * 1.8); /* 1.125rem — sheets, hero */
+
+  /* Type scale. `--text-2xs` used to be 0.8rem — *larger* than Tailwind's
+     `text-xs` at 0.75rem — so the names lied about the order. The ramp below
+     is monotonic: 3xs < 2xs < xs < sm. */
+  --text-3xs: 0.625rem; /* 10px — kbd, fingering numerals */
+  --text-2xs: 0.6875rem; /* 11px — dense desktop chrome */
+
+  --shadow-raised: var(--shadow-raised);
+  --shadow-overlay: var(--shadow-overlay);
+  --shadow-popover: var(--shadow-popover);
+  --shadow-sheet: var(--shadow-sheet);
+
+  --ease-settle: var(--ease-settle);
+  --ease-out: var(--ease-out);
+  --ease-in: var(--ease-in);
+  --duration-instant: var(--duration-instant);
+  --duration-fast: var(--duration-fast);
+  --duration-normal: var(--duration-normal);
+  --duration-slow: var(--duration-slow);
 }
 
-/* Height the bottom pill nav reserves at the foot of every scroll view. */
 @theme {
+  /* Height the bottom pill nav reserves at the foot of every scroll view. */
   --spacing-safe-b: env(safe-area-inset-bottom, 0px);
+  --spacing-safe-t: env(safe-area-inset-top, 0px);
   --spacing-navbar: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  /* The fretboard diagram width, previously written as both `w-[152px]` and
+     `w-[8.5rem]` across four files. */
+  --spacing-fretboard: 9.5rem;
 }
 
 /* Toolbars and chip rows scroll sideways without an ugly scrollbar on phones. */
@@ -65,79 +220,30 @@
   }
 }
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+/* One focus treatment for the whole app, so every control can opt in with a
+   single class instead of respelling the ring. */
+@utility focus-ring {
+  outline: none;
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }
 
-.dark {
-  /* Dark studio: charcoal surfaces, warm amber accent */
-  --background: oklch(0.17 0.006 60);
-  --foreground: oklch(0.96 0.006 80);
-  --card: oklch(0.205 0.007 60);
-  --card-foreground: oklch(0.96 0.006 80);
-  --popover: oklch(0.205 0.007 60);
-  --popover-foreground: oklch(0.96 0.006 80);
-  --primary: oklch(0.78 0.16 68);
-  --primary-foreground: oklch(0.2 0.02 60);
-  --secondary: oklch(0.27 0.008 60);
-  --secondary-foreground: oklch(0.96 0.006 80);
-  --muted: oklch(0.25 0.007 60);
-  --muted-foreground: oklch(0.71 0.02 70);
-  --accent: oklch(0.3 0.03 65);
-  --accent-foreground: oklch(0.95 0.02 80);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.78 0.16 68);
-  --chart-1: oklch(0.78 0.16 68);
-  --chart-2: oklch(0.7 0.14 160);
-  --chart-3: oklch(0.68 0.15 25);
-  --chart-4: oklch(0.72 0.13 300);
-  --chart-5: oklch(0.75 0.12 220);
-  --sidebar: oklch(0.19 0.006 60);
-  --sidebar-foreground: oklch(0.96 0.006 80);
-  --sidebar-primary: oklch(0.78 0.16 68);
-  --sidebar-primary-foreground: oklch(0.2 0.02 60);
-  --sidebar-accent: oklch(0.27 0.008 60);
-  --sidebar-accent-foreground: oklch(0.96 0.006 80);
-  --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.78 0.16 68);
+/* Long lists pay layout and paint only for what's near the viewport. */
+@utility content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 12rem;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   body {
     @apply bg-background text-foreground;
@@ -145,12 +251,19 @@
     -webkit-tap-highlight-color: transparent;
     /* Keep the shell from rubber-banding behind the fixed chrome. */
     overscroll-behavior-y: none;
+    font-synthesis-weight: none;
   }
-  html {
-    @apply font-sans;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+
+  /* Headings inherit the body face; the app has no separate display type, so
+     the old --was applied 15+ times for no visual effect. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-semibold tracking-tight;
+    text-wrap: balance;
   }
+
   /* Taps register immediately instead of waiting on a double-tap-zoom guess. */
   button,
   a,
@@ -158,6 +271,7 @@
   [role="button"] {
     touch-action: manipulation;
   }
+
   /* Fat-finger friendly range thumbs on touch screens. */
   @media (pointer: coarse) {
     input[type="range"] {
@@ -171,7 +285,8 @@
   /* Themed scrollbars: Firefox reads these two properties directly. */
   * {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklch, var(--foreground) 25%, transparent) transparent;
+    scrollbar-color: color-mix(in oklch, var(--foreground) 25%, transparent)
+      transparent;
   }
   /* Chromium/WebKit build the scrollbar from pseudo-elements instead. */
   ::-webkit-scrollbar {
@@ -202,6 +317,20 @@
     }
     ::-webkit-scrollbar {
       display: none;
+    }
+  }
+
+  /* Honour the OS setting. Every swipe, sheet and auto-scroll in the app ran
+     unconditionally before this. Auto-scroll is exempt in its own component:
+     it is the feature, not decoration. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }

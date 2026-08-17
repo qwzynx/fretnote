@@ -65,22 +65,56 @@ const SHAPES: Record<string, ChordShape> = {
  * by transposing the nearest known shape of the same quality, so uncommon keys
  * still render something reasonable. Returns null if nothing fits.
  */
+/**
+ * Resolved lookups, including the misses. A song renders one diagram per
+ * chord occurrence, so the same handful of names is resolved over and over —
+ * and an unknown name costs 495 iterations of the search below, each running
+ * a regex and building a transposed string. The catalog builder further down
+ * already memoizes the same way.
+ */
+const shapeCache = new Map<string, ChordShape | null>();
+
+/** Known chord names grouped by quality, so the search skips the mismatches. */
+let byQuality: Map<string, string[]> | null = null;
+
+function knownNamesByQuality(): Map<string, string[]> {
+  if (byQuality) return byQuality;
+  byQuality = new Map();
+  for (const knownName of Object.keys(SHAPES)) {
+    const km = knownName.match(/^([A-G][#b]?)(.*)$/);
+    if (!km) continue;
+    const list = byQuality.get(km[2]);
+    if (list) list.push(knownName);
+    else byQuality.set(km[2], [knownName]);
+  }
+  return byQuality;
+}
+
 export function getChordShape(name: string): ChordShape | null {
+  const cached = shapeCache.get(name);
+  if (cached !== undefined) return cached;
+
+  const resolved = resolveChordShape(name);
+  shapeCache.set(name, resolved);
+  return resolved;
+}
+
+function resolveChordShape(name: string): ChordShape | null {
   if (SHAPES[name]) return SHAPES[name];
 
   const match = name.match(/^([A-G][#b]?)(.*)$/);
   if (!match) return null;
   const [, , quality] = match;
 
+  const candidates = knownNamesByQuality().get(quality);
+  if (!candidates) return null;
+
   // Find a known chord with the same quality, then transpose its shape.
   for (let semitones = 1; semitones <= 11; semitones++) {
-    for (const knownName of Object.keys(SHAPES)) {
-      const km = knownName.match(/^([A-G][#b]?)(.*)$/);
-      if (!km || km[2] !== quality) continue;
+    for (const knownName of candidates) {
       // Does transposing knownName by `semitones` produce our target?
       if (transposeChord(knownName, semitones) === name) {
-        const base = SHAPES[knownName];
-        return shiftShape(base, semitones);
+        return shiftShape(SHAPES[knownName], semitones);
       }
     }
   }

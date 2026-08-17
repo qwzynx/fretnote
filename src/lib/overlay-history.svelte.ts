@@ -10,7 +10,7 @@ interface Layer {
   popped: boolean;
 }
 
-let layers: Layer[] = [];
+const layers: Layer[] = [];
 let suppressed = 0;
 const pendingAfterPop: Array<() => void> = [];
 let fallback: (() => void) | null = null;

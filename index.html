@@ -7,15 +7,33 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#2a2724" />
+    <meta name="theme-color" content="#211f1d" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Fretnote</title>
+    <!-- Fonts are self-hosted (see globals.css). Preloading the two latin
+         faces lets them start downloading alongside the CSS rather than
+         after it, so there is no visible swap on a cold start. -->
+    <link
+      rel="preload"
+      href="/fonts/inter-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/jetbrains-mono-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&display=swap');
-      /* Match the dark theme background before app CSS loads to avoid a white flash */
+      /* Paint the app ground before the stylesheet lands, so a cold start
+         never flashes white. Must track --background in globals.css. */
       html,
       body {
-        background: oklch(0.17 0.006 60);
+        background: oklch(0.155 0.006 60);
+        margin: 0;
       }
     </style>
   </head>

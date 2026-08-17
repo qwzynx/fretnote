@@ -104,11 +104,11 @@
 </script>
 
 {#if setlist === undefined}
-  <main class="mx-auto w-full max-w-3xl px-4 py-8">
+  <main class="mx-auto w-full max-w-4xl px-4 py-5 sm:py-8">
     <p class="text-sm text-muted-foreground">Loading…</p>
   </main>
 {:else if setlist === null}
-  <main class="mx-auto w-full max-w-3xl px-4 py-8">
+  <main class="mx-auto w-full max-w-4xl px-4 py-5 sm:py-8">
     <p class="text-sm text-muted-foreground">Setlist not found.</p>
     <Button
       variant="ghost"
@@ -121,7 +121,7 @@
     </Button>
   </main>
 {:else}
-  <main class="mx-auto w-full max-w-3xl px-4 py-4 sm:py-8">
+  <main class="mx-auto w-full max-w-4xl px-4 py-5 sm:py-8">
     <!-- Header -->
     <div class="mb-5 flex items-start justify-between gap-4 sm:mb-6">
       <div class="flex items-center gap-2">
@@ -137,9 +137,8 @@
         </Button>
       </div>
       <Button
-        variant="outline"
+        variant="destructive-soft"
         size="sm"
-        class="text-destructive hover:bg-destructive/10"
         onclick={handleDelete}
         aria-label="Delete setlist"
       >
@@ -152,7 +151,7 @@
     <div class="mb-5 sm:mb-6">
       {#if editingTitle}
         <div class="flex flex-wrap items-center gap-2">
-          <Input bind:value={titleDraft} class="min-w-0 flex-1 font-heading text-lg font-semibold sm:text-xl" />
+          <Input bind:value={titleDraft} class="min-w-0 flex-1 text-lg font-semibold sm:text-xl" />
           <Button size="sm" onclick={saveTitle}>Save</Button>
           <Button variant="ghost" size="sm" onclick={() => (editingTitle = false)}>Cancel</Button>
         </div>
@@ -160,7 +159,7 @@
         <div class="flex items-center gap-2">
           <div class="flex min-w-0 items-center gap-2">
             <ListMusic class="size-5 shrink-0 text-primary" />
-            <h1 class="truncate font-heading text-xl font-semibold tracking-tight sm:text-2xl">
+            <h1 class="truncate text-xl font-semibold tracking-tight sm:text-2xl">
               {setlist.title}
             </h1>
           </div>
@@ -217,7 +216,7 @@
             <a
               href={`#/notes/${note.id}`}
               onclick={(e) => goto(`/notes/${note.id}`, e)}
-              class="min-w-0 flex-1 outline-none"
+              class="focus-ring min-w-0 flex-1 rounded-md"
             >
               <p class="truncate font-medium">{note.title}</p>
               <p class="truncate text-xs text-muted-foreground">{note.artist}</p>

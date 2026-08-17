@@ -1,20 +1,20 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { Guitar, Music4, Search, X } from "@lucide/svelte";
-  import { listNotes } from "@/lib/db";
-  import type { Note } from "@/lib/types";
+  import { listNoteSummaries } from "@/lib/db";
+  import type { NoteSummary } from "@/lib/types";
   import { searchOpenStore } from "@/lib/search-open.svelte";
   import { closeSearch, goto } from "@/lib/nav-stack.svelte";
   import { dragDismiss } from "@/lib/actions/drag-dismiss";
   import { isPhone } from "@/lib/media.svelte";
 
-  let allNotes = $state<Note[]>([]);
+  let allNotes = $state<NoteSummary[]>([]);
   let query = $state("");
   let activeIdx = $state(0);
   let inputEl: HTMLInputElement;
   let resultsEl: HTMLElement;
 
-  const results = $derived(() => {
+  const results = $derived.by(() => {
     const q = query.trim().toLowerCase();
     if (!q) return allNotes.slice(0, 8);
     return allNotes
@@ -30,7 +30,11 @@
 
   $effect(() => {
     if (searchOpenStore.open) {
-      if (!allNotes.length) listNotes().then((ns) => (allNotes = ns));
+      // Refetch on every open. Loading only when the cache was empty meant a
+      // note created after the first open stayed unsearchable until restart.
+      listNoteSummaries()
+        .then((ns) => (allNotes = ns))
+        .catch((err) => console.error(err));
       tick().then(() => inputEl?.focus());
       query = "";
       activeIdx = 0;
@@ -41,12 +45,12 @@
     closeSearch();
   }
 
-  function openNote(note: Note) {
+  function openNote(note: NoteSummary) {
     goto(`/notes/${note.id}`);
   }
 
   function handleKeydown(e: KeyboardEvent) {
-    const list = results();
+    const list = results;
     if (e.key === "Escape") {
       e.stopPropagation();
       close();
@@ -61,10 +65,16 @@
     }
   }
 
+  let lastQuery = "";
   $effect(() => {
-    // Reset active index when results change
-    activeIdx = 0;
-    results();
+    // A new search puts the highlight back on the first row; the clamp
+    // covers the list shrinking under the cursor for any other reason.
+    if (query !== lastQuery) {
+      lastQuery = query;
+      activeIdx = 0;
+    } else if (activeIdx >= results.length) {
+      activeIdx = 0;
+    }
   });
 </script>
 
@@ -72,7 +82,7 @@
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <!-- Full-height sheet on phones; floating palette from `sm` up. -->
   <div
-    class="fixed inset-0 z-50 flex items-stretch justify-center bg-black/60 backdrop-blur-sm sm:items-start sm:pt-[15vh]"
+    class="fixed inset-0 z-50 flex items-stretch justify-center bg-scrim backdrop-blur-sm sm:items-start sm:pt-[15vh]"
     onclick={(e) => { if (e.target === e.currentTarget) close(); }}
     onkeydown={(e) => { if (e.key === "Escape") close(); }}
   >
@@ -115,12 +125,12 @@
         bind:this={resultsEl}
         class="flex-1 overflow-y-auto overscroll-contain py-1 sm:max-h-80 sm:flex-none"
       >
-        {#if results().length === 0}
+        {#if results.length === 0}
           <p class="px-4 py-6 text-center text-sm text-muted-foreground">
             {query ? "No notes found." : "Start typing to search…"}
           </p>
         {:else}
-          {#each results() as note, i (note.id)}
+          {#each results as note, i (note.id)}
             <button
               type="button"
               onclick={() => openNote(note)}

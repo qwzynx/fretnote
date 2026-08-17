@@ -109,7 +109,7 @@
           {#each slots as _, i}
             <div
               class={cn(
-                "flex h-4 w-9 items-center justify-center text-kbd sm:w-8",
+                "flex h-4 w-9 items-center justify-center text-3xs sm:w-8",
                 isDownbeat(start + i)
                   ? "font-bold text-foreground"
                   : "text-muted-foreground/50"

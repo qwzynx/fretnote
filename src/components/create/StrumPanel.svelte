@@ -26,7 +26,7 @@
         <span class={cn("text-lg font-bold leading-none", info.className)}>
           {info.symbol}
         </span>
-        <span class="text-kbd text-muted-foreground">{s}</span>
+        <span class="text-3xs text-muted-foreground">{s}</span>
       </button>
     {/each}
   </div>

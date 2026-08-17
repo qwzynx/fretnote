@@ -12,6 +12,7 @@
     Type,
   } from "@lucide/svelte";
   import type { Note } from "@/lib/types";
+  import { TUNINGS, DEFAULT_TUNING } from "@/lib/music/tunings";
   import { formatSemitones, transposeKey } from "@/lib/music/transpose";
   import type { StrokeType } from "@/lib/strumming";
   import { getSettings } from "@/lib/settings";
@@ -29,6 +30,13 @@
   const MAX_FONT = 26;
 
   let { note }: { note: Note } = $props();
+
+  // The note carries its own tuning, so a Drop D tab labels its stave D A D
+  // G B e rather than borrowing whatever the app-wide default happens to be.
+  const tuning = $derived(
+    TUNINGS.find((t) => t.id === note.tuning) ?? DEFAULT_TUNING
+  );
+  const stringNames = $derived(tuning.names);
 
   const _s = getSettings();
   let transpose = $state(0);
@@ -75,6 +83,18 @@
     // Sub-pixel remainder, so slow speeds still creep instead of stalling.
     let offset = 0;
 
+    // Reading clientHeight/scrollHeight straight after writing scrollTop
+    // forced a synchronous layout on every single frame. They only change
+    // when the content or viewport does, so measure once and refresh on
+    // those events instead.
+    let maxScroll = host.scrollHeight - host.clientHeight;
+    const remeasure = () => {
+      maxScroll = host.scrollHeight - host.clientHeight;
+    };
+    const ro = new ResizeObserver(remeasure);
+    ro.observe(host);
+    window.addEventListener("resize", remeasure);
+
     const step = (ts: number) => {
       if (lastTs) {
         offset += (_speed * (ts - lastTs)) / 1000;
@@ -83,7 +103,7 @@
           host.scrollTop += whole;
           offset -= whole;
         }
-        if (host.scrollTop + host.clientHeight >= host.scrollHeight - 1) {
+        if (host.scrollTop >= maxScroll - 1) {
           scrolling = false;
           lastTs = 0;
           rafId = null;
@@ -97,6 +117,8 @@
     rafId = requestAnimationFrame(step);
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
+      ro.disconnect();
+      window.removeEventListener("resize", remeasure);
       lastTs = 0;
     };
   });
@@ -293,6 +315,7 @@
       {transpose}
       {fontSize}
       tabBlocks={note.tabBlocks}
+      {stringNames}
       {detailed}
     />
   {:else if note.tabBlocks?.length}
@@ -306,11 +329,11 @@
           {/if}
           {#if block.hint}
             <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
-              <TabHintView hint={block.hint} class="w-40 sm:w-[152px]" />
-              <TabView tab={block.columns} {fontSize} class="w-full min-w-0 sm:flex-1" />
+              <TabHintView hint={block.hint} {stringNames} class="w-40 sm:w-[152px]" />
+              <TabView tab={block.columns} {fontSize} {stringNames} class="w-full min-w-0 sm:flex-1" />
             </div>
           {:else}
-            <TabView tab={block.columns} {fontSize} />
+            <TabView tab={block.columns} {fontSize} {stringNames} />
           {/if}
         </div>
       {/each}

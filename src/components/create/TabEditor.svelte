@@ -56,7 +56,7 @@
       : block.columns.length || 1
   );
 
-  const chunks = $derived(() => {
+  const chunks = $derived.by(() => {
     const result: number[][] = [];
     for (let i = 0; i < block.columns.length; i += perRow) {
       const end = Math.min(i + perRow, block.columns.length);
@@ -184,7 +184,7 @@
     class="overflow-x-auto rounded-lg border border-border bg-card/60 p-3 sm:p-4"
   >
     <div class="flex flex-col gap-4">
-      {#each chunks() as colIdxs, ci}
+      {#each chunks as colIdxs, ci}
         <div class="inline-flex flex-col gap-1 font-mono text-sm">
           {#each DISPLAY_ORDER as strIdx, rowIdx}
             <div class="flex items-center">

@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { untrack } from "svelte";
   import { Guitar, Heart, Music4, Trash2 } from "@lucide/svelte";
   import { toggleFavorite, deleteNote } from "@/lib/db";
-  import type { Note } from "@/lib/types";
+  import type { NoteSummary } from "@/lib/types";
   import { goto } from "@/lib/nav-stack.svelte";
   import { swipeHorizontal } from "@/lib/actions/swipe-horizontal";
   import { cardActions } from "@/lib/card-actions.svelte";
@@ -9,8 +10,17 @@
   import CardContent from "@/components/ui/CardContent.svelte";
   import CardFooter from "@/components/ui/CardFooter.svelte";
   import Badge from "@/components/ui/Badge.svelte";
+  import { cn } from "@/lib/utils";
 
   const TRAY_WIDTH = 128;
+
+  // Built once for the whole feed. Constructing an Intl formatter per card
+  // per render is a surprisingly large share of a long list's render cost.
+  const DATE_FMT = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 
   let {
     note,
@@ -18,7 +28,7 @@
     onDelete,
     swipeActions = false,
   }: {
-    note: Note;
+    note: NoteSummary;
     onToggleFavorite?: (id: string, value: boolean) => void;
     onDelete?: (id: string) => void;
     swipeActions?: boolean;
@@ -26,16 +36,23 @@
 
   let isFav = $state(note.isFavorite ?? false);
   let dragX = $state(0);
-  let wrapperEl: HTMLElement;
+  let dragging = $state(false);
+  let wrapperEl = $state<HTMLElement | undefined>(undefined);
 
-  // Another card was opened — spring this one closed.
+  // Another card was opened — spring this one closed. Reading and writing
+  // dragX from one effect made it re-entrant on every card in the feed, so
+  // the close is folded into setOpen's bookkeeping instead.
   $effect(() => {
-    if (dragX !== 0 && cardActions.openId !== note.id) {
-      dragX = 0;
-    }
+    const openId = cardActions.openId;
+    if (openId !== note.id) untrack(() => { if (dragX !== 0) dragX = 0; });
   });
 
+  function handleDragStart() {
+    dragging = true;
+  }
+
   function setOpen(open: boolean) {
+    dragging = false;
     dragX = open ? -TRAY_WIDTH : 0;
     if (open) {
       cardActions.openId = note.id;
@@ -89,7 +106,7 @@
     }
   }
 
-  const DIFFICULTY_LABEL: Record<Note["difficulty"], string> = {
+  const DIFFICULTY_LABEL: Record<NoteSummary["difficulty"], string> = {
     beginner: "Beginner",
     intermediate: "Intermediate",
     advanced: "Advanced",
@@ -101,7 +118,7 @@
     <a
       href={`#/notes/${note.id}`}
       onclick={(e) => goto(`/notes/${note.id}`, e)}
-      class="outline-none"
+      class="focus-ring block rounded-t-xl"
     >
       <CardContent class="flex flex-col gap-2.5 px-4 py-3.5 sm:gap-3 sm:py-4">
         <div class="flex items-center justify-between">
@@ -120,7 +137,7 @@
 
         <div>
           <h3
-            class="font-heading text-lg font-semibold leading-tight group-hover/note:text-primary"
+            class="text-lg font-semibold leading-tight group-hover/note:text-primary"
           >
             {note.title}
           </h3>
@@ -149,7 +166,7 @@
       class="flex items-center justify-between gap-2 border-t bg-muted/30 px-4 py-2"
     >
       <span class="shrink-0 text-xs text-muted-foreground">
-        {new Date(note.createdAt).toLocaleDateString()}
+        {DATE_FMT.format(new Date(note.createdAt))}
       </span>
       <div class="flex min-w-0 items-center gap-2">
         <span class="truncate text-xs text-muted-foreground">
@@ -159,11 +176,11 @@
           type="button"
           onclick={handleFavorite}
           aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
-          class="-mr-1.5 flex size-8 items-center justify-center rounded-md transition-colors hover:text-rose-500 active:bg-muted sm:-mr-0 sm:size-6"
+          class="-mr-1.5 flex size-8 items-center justify-center rounded-md transition-colors hover:text-favorite active:bg-muted sm:-mr-0 sm:size-6"
         >
           <Heart
             class="size-4 sm:size-3.5 {isFav
-              ? 'fill-rose-500 text-rose-500'
+              ? 'fill-favorite text-favorite'
               : 'text-muted-foreground'}"
           />
         </button>
@@ -181,16 +198,16 @@
         type="button"
         onclick={handleFavorite}
         aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
-        class="flex flex-1 flex-col items-center justify-center gap-1 bg-amber-500 text-xs font-medium text-white"
+        class="focus-ring flex flex-1 flex-col items-center justify-center gap-1 bg-favorite text-xs font-medium text-white"
       >
-        <Heart class="size-5 {isFav ? 'fill-white' : ''}" />
+        <Heart class="size-5 {isFav ? 'fill-current' : ''}" />
         Favorite
       </button>
       <button
         type="button"
         onclick={handleDelete}
         aria-label="Delete note"
-        class="flex flex-1 flex-col items-center justify-center gap-1 bg-destructive text-xs font-medium text-destructive-foreground"
+        class="focus-ring flex flex-1 flex-col items-center justify-center gap-1 bg-destructive text-xs font-medium text-destructive-foreground"
       >
         <Trash2 class="size-5" />
         Delete
@@ -200,13 +217,20 @@
     <div
       use:swipeHorizontal={{
         directions: "left",
+        onDragStart: handleDragStart,
         onDragMove: handleDragMove,
         onCommit: handleCommit,
         onCancel: handleCancel,
       }}
       onclickcapture={handleFrontClick}
-      style="transform: translateX({dragX}px)"
-      class="relative z-10 transition-transform duration-150"
+      style="transform: translateX({dragX}px); will-change: transform"
+      class={cn(
+        "relative z-10",
+        // Only animate when settling. Leaving the transition on during the
+        // drag restarted a 150ms interpolation on every touchmove, so the
+        // card trailed the finger instead of tracking it.
+        !dragging && "transition-transform duration-150"
+      )}
     >
       {@render cardBody()}
     </div>

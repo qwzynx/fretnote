@@ -6,7 +6,7 @@
 Write chord sheets and tabs with a real fretboard editor, keep everything searchable in one place, and never touch a server to do it.
 
 [![Release](https://github.com/qwzynx/fretnote/actions/workflows/release.yml/badge.svg)](https://github.com/qwzynx/fretnote/actions/workflows/release.yml)
-![Version](https://img.shields.io/badge/version-0.3.0-blue)
+![Version](https://img.shields.io/badge/version-0.5.0-blue)
 ![Tauri](https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white)
 ![Svelte](https://img.shields.io/badge/Svelte-5-FF3E00?logo=svelte&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)

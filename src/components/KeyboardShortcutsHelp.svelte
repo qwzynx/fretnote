@@ -37,18 +37,17 @@
 </script>
 
 {#if open}
-  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <div
     role="dialog"
     aria-modal="true"
     aria-label="Keyboard shortcuts"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-scrim backdrop-blur-sm"
     onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}
     onkeydown={handleKeydown}
   >
     <div class="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-2xl">
       <div class="mb-4 flex items-center justify-between">
-        <h2 class="font-heading text-lg font-semibold">Keyboard shortcuts</h2>
+        <h2 class="text-lg font-semibold">Keyboard shortcuts</h2>
         <button
           type="button"
           onclick={onclose}

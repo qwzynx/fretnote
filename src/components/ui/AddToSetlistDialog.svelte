@@ -80,13 +80,12 @@
 </script>
 
 {#if open}
-  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <div
     role="dialog"
     tabindex="-1"
     aria-modal="true"
     aria-label="Add to setlist"
-    class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center"
+    class="fixed inset-0 z-50 flex items-end justify-center bg-scrim backdrop-blur-sm sm:items-center"
     onclick={(e) => { if (e.target === e.currentTarget) onclose(); }}
     onkeydown={handleKeydown}
   >

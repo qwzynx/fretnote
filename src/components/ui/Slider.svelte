@@ -26,7 +26,7 @@
   {step}
   aria-label={ariaLabel}
   class={cn(
-    "w-full cursor-pointer accent-primary focus-visible:outline-none",
+    "focus-ring w-full cursor-pointer rounded-full accent-primary",
     className
   )}
 />

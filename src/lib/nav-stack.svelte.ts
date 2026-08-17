@@ -133,6 +133,10 @@ export function toggleSearch() {
   else openSearch();
 }
 
+function currentHash(): string {
+  return window.location.hash.replace(/^#/, "") || "/";
+}
+
 function handleNavPop() {
   if (suppressed > 0) {
     suppressed -= 1;
@@ -141,17 +145,43 @@ function handleNavPop() {
     applyTop();
     return;
   }
-  if (stack.length > 1) {
-    stack = stack.slice(0, -1);
-    markerCount -= 1;
+
+  // Not every popstate is a back press. Browsers also fire it for any
+  // same-document history navigation: the forward button, a hash the user
+  // typed or pasted, a deep link followed while the app is already open.
+  // Treating those as "pop one level" rewrote the URL back to the level
+  // below and silently discarded where the user actually asked to go —
+  // opening #/settings from #/create landed you on the feed.
+  //
+  // The tell is whether the URL we've arrived at is the one a back press
+  // would have produced. If it isn't, the navigation came from outside this
+  // module and the URL, not the stack, is the source of truth.
+  const landed = currentHash();
+  const wouldPopTo = stack.length > 1 ? stack[stack.length - 2] : stack[0];
+
+  if (hashFor(wouldPopTo) === landed) {
+    if (stack.length > 1) {
+      stack = stack.slice(0, -1);
+      markerCount -= 1;
+    }
     applyTop();
+    return;
   }
+
+  // Adopt the URL rather than fighting it. No applyTop() here: that would
+  // rewrite the very hash we're adopting.
+  seedFromCurrentHash();
+  searchOpenStore.open = false;
+  window.dispatchEvent(new Event("hashchange"));
 }
 
 function seedFromCurrentHash() {
-  const hash = window.location.hash.replace(/^#/, "") || "/";
-  const level = classify(hash);
+  const level = classify(currentHash());
   stack = level.kind === "home" ? [{ kind: "home" }] : [{ kind: "home" }, level];
+  // Deliberately 0, not `stack.length - 1`: we own no pushed markers above
+  // the entry we're sitting on. Claiming otherwise would make the next
+  // navigation compute a negative diff and `history.go()` backwards out of
+  // the app. Erring low only ever costs an extra marker push.
   markerCount = 0;
 }
 

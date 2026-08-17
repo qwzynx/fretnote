@@ -16,7 +16,7 @@
   class="sticky top-0 z-40 border-b border-border/80 bg-background pt-[env(safe-area-inset-top,0px)]"
 >
   <div class="mx-auto flex h-12 w-full max-w-6xl items-center gap-4 px-4 sm:h-14">
-    <a href="#/" onclick={(e) => goto("/", e)} class="flex items-center gap-2 font-heading">
+    <a href="#/" onclick={(e) => goto("/", e)} class="flex items-center gap-2">
       <span
         class="flex size-7 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/25 sm:size-8"
       >
@@ -59,7 +59,7 @@
       >
         <Search />
         Search notes
-        <kbd class="ml-1 rounded border border-border bg-muted px-1 font-mono text-kbd">⌘K</kbd>
+        <kbd class="ml-1 rounded border border-border bg-muted px-1 font-mono text-3xs">⌘K</kbd>
       </Button>
       <Button
         variant="ghost"

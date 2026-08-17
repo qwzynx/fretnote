@@ -125,11 +125,11 @@
 <svelte:window onclick={handleExportOutsideClick} />
 
 {#if note === undefined}
-  <main class="mx-auto w-full max-w-3xl px-4 py-8">
+  <main class="mx-auto w-full max-w-4xl px-4 py-5 sm:py-8">
     <p class="text-sm text-muted-foreground">Loading…</p>
   </main>
 {:else if note === null}
-  <main class="mx-auto w-full max-w-3xl px-4 py-8">
+  <main class="mx-auto w-full max-w-4xl px-4 py-5 sm:py-8">
     <p class="text-sm text-muted-foreground">Note not found.</p>
     <Button variant="ghost" size="sm" class="mt-4" href="#/" onclick={(e: MouseEvent) => goto("/", e)}>
       Back to notes
@@ -147,7 +147,7 @@
       onCommit: handleBackCommit,
       onCancel: handleBackCancel,
     }}
-    class="mx-auto w-full max-w-3xl px-4 py-4 sm:py-8"
+    class="mx-auto w-full max-w-4xl px-4 py-5 sm:py-8"
   >
     <div class="mb-4 flex items-center justify-between gap-2">
       <Button
@@ -172,7 +172,7 @@
         >
           <Heart
             class="size-4 {isFav
-              ? 'fill-rose-500 text-rose-500'
+              ? 'fill-favorite text-favorite'
               : 'text-muted-foreground'}"
           />
         </Button>
@@ -250,9 +250,8 @@
             Edit
           </Button>
           <Button
-            variant="outline"
+            variant="destructive-soft"
             size="sm"
-            class="text-destructive hover:bg-destructive/10"
             onclick={handleDelete}
           >
             <Trash2 />
@@ -263,7 +262,7 @@
     </div>
 
     <header class="mb-5 sm:mb-6">
-      <h1 class="font-heading text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
+      <h1 class="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
         {note.title}
       </h1>
       <p class="mt-0.5 text-base text-muted-foreground sm:mt-1 sm:text-lg">
@@ -314,13 +313,12 @@
     {@const sheetItem =
       "flex w-full items-center gap-3 rounded-lg px-3 py-3.5 text-left text-base active:bg-muted"}
     {@const noteId = note.id}
-    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <div
+      <div
       role="dialog"
       tabindex="-1"
       aria-modal="true"
       aria-label="Note actions"
-      class="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm sm:hidden"
+      class="fixed inset-0 z-50 flex items-end bg-scrim backdrop-blur-sm sm:hidden"
       onclick={(e) => { if (e.target === e.currentTarget) actionsOpen = false; }}
       onkeydown={(e) => { if (e.key === "Escape") actionsOpen = false; }}
     >

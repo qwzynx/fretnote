@@ -32,21 +32,24 @@
   }
 </script>
 
-<div class="relative inline-flex items-center">
+<!-- `className` belongs on the wrapper, not the <select>. Sizing and
+     visibility classes are what call sites pass, and putting them on the
+     inner element meant `class="sm:hidden"` hid the control but left its
+     chevron floating on the page. -->
+<div class={cn("relative inline-flex items-center", className)}>
   <select
     {value}
     onchange={handleChange}
     class={cn(
-      "appearance-none rounded-lg border border-input bg-transparent pr-8 pl-3 text-base outline-none transition-colors focus:ring-2 focus:ring-ring/50 focus:border-ring disabled:cursor-not-allowed disabled:opacity-50 sm:pr-7 sm:pl-2.5 sm:text-sm dark:bg-input/30 dark:hover:bg-input/50",
-      size === "sm" ? "h-9 sm:h-7 sm:text-2xs" : "h-10 sm:h-8",
-      className
+      "focus-ring w-full appearance-none rounded-lg border border-input bg-input/30 pr-8 pl-3 text-base transition-colors hover:bg-input/50 disabled:cursor-not-allowed disabled:opacity-50 sm:pr-7 sm:pl-2.5 sm:text-sm",
+      size === "sm" ? "h-9 sm:h-7 sm:text-2xs" : "h-10 sm:h-8"
     )}
     {...rest}
   >
     {#if placeholder}
       <option value="" disabled>{placeholder}</option>
     {/if}
-    {#each items as item}
+    {#each items as item (item.value)}
       <option value={item.value}>{item.label}</option>
     {/each}
   </select>

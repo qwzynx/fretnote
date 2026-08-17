@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db-driver";
-import type { Setlist, SetlistWithNotes, Note, NoteType, Difficulty, TabBlock } from "@/lib/types";
+import { rowToNote, type Row as NoteRow } from "@/lib/db";
+import type { Note, Setlist, SetlistWithNotes } from "@/lib/types";
 
 interface SetlistRow {
   id: string;
@@ -7,46 +8,6 @@ interface SetlistRow {
   description: string;
   created_at: string;
   note_count: number;
-}
-
-interface NoteRow {
-  id: string;
-  slug: string;
-  type: string;
-  title: string;
-  artist: string;
-  key: string;
-  capo: number;
-  difficulty: string;
-  tags: string;
-  created_at: string;
-  chord_sheet: string | null;
-  tab_blocks: string | null;
-  chords: string;
-  strumming_pattern: string | null;
-  bpm: number | null;
-  is_favorite: number;
-}
-
-function rowToNote(r: NoteRow): Note {
-  return {
-    id: r.id,
-    slug: r.slug,
-    type: r.type as NoteType,
-    title: r.title,
-    artist: r.artist,
-    key: r.key,
-    capo: r.capo,
-    difficulty: r.difficulty as Difficulty,
-    tags: JSON.parse(r.tags),
-    createdAt: r.created_at,
-    chordSheet: r.chord_sheet ?? undefined,
-    tabBlocks: r.tab_blocks ? JSON.parse(r.tab_blocks) : undefined,
-    chords: JSON.parse(r.chords),
-    strummingPattern: r.strumming_pattern ? JSON.parse(r.strumming_pattern) : undefined,
-    bpm: r.bpm ?? undefined,
-    isFavorite: r.is_favorite === 1,
-  };
 }
 
 export async function listSetlists(): Promise<Setlist[]> {
@@ -133,6 +94,8 @@ export async function updateSetlist(id: string, title: string, description: stri
 
 export async function deleteSetlist(id: string): Promise<void> {
   const db = await getDb();
+  // Explicit rather than relying on ON DELETE CASCADE — see deleteNote.
+  await db.execute("DELETE FROM setlist_items WHERE setlist_id=$1", [id]);
   await db.execute("DELETE FROM setlists WHERE id=$1", [id]);
 }
 

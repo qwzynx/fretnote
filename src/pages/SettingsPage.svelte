@@ -88,7 +88,7 @@
       <Settings2 class="size-5" />
     </span>
     <div>
-      <h1 class="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
+      <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
         Settings
       </h1>
       <p class="text-sm text-muted-foreground">
@@ -100,7 +100,7 @@
   <div class="space-y-8">
     <!-- New note defaults -->
     <section class="space-y-4">
-      <h2 class="font-heading text-base font-semibold">New note defaults</h2>
+      <h2 class="text-base font-semibold">New note defaults</h2>
 
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div class="space-y-1.5">
@@ -140,7 +140,7 @@
 
     <!-- Reader defaults -->
     <section class="space-y-4">
-      <h2 class="font-heading text-base font-semibold">Reader defaults</h2>
+      <h2 class="text-base font-semibold">Reader defaults</h2>
 
       <div class="space-y-2">
         <div class="flex items-center justify-between">
@@ -181,7 +181,7 @@
 
     <!-- Backup & sync -->
     <section class="space-y-4">
-      <h2 class="font-heading text-base font-semibold">Backup & sync</h2>
+      <h2 class="text-base font-semibold">Backup & sync</h2>
       <p class="text-sm text-muted-foreground">
         Export your whole library (notes and setlists) to a file, then import it on
         another device to bring the two in sync.

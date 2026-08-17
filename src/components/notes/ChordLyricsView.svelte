@@ -61,10 +61,10 @@
           {#if block.hint}
             <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
               <TabHintView hint={block.hint} {stringNames} class="w-40 sm:w-[152px]" />
-              <TabView tab={block.columns} {fontSize} class="w-full min-w-0 sm:flex-1" />
+              <TabView tab={block.columns} {fontSize} {stringNames} class="w-full min-w-0 sm:flex-1" />
             </div>
           {:else}
-            <TabView tab={block.columns} {fontSize} />
+            <TabView tab={block.columns} {fontSize} {stringNames} />
           {/if}
         {:else}
           <div

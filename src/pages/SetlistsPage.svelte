@@ -53,7 +53,7 @@
   }
 </script>
 
-<main class="mx-auto w-full max-w-4xl px-4 py-5 sm:py-8">
+<main class="mx-auto w-full max-w-6xl px-4 py-5 sm:py-8">
   <div class="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
     <div class="flex items-center gap-3">
       <span
@@ -62,7 +62,7 @@
         <ListMusic class="size-5" />
       </span>
       <div>
-        <h1 class="font-heading text-xl font-semibold tracking-tight sm:text-2xl">
+        <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
           Setlists
         </h1>
         <p class="text-sm text-muted-foreground">
@@ -78,7 +78,7 @@
 
   {#if creating}
     <Card class="mb-6 p-5">
-      <h2 class="mb-4 font-heading text-base font-semibold">New setlist</h2>
+      <h2 class="mb-4 text-base font-semibold">New setlist</h2>
       <div class="space-y-3">
         <div class="space-y-1.5">
           <Label for="sl-title">Title</Label>
@@ -126,7 +126,7 @@
           <a
             href={`#/setlists/${s.id}`}
             onclick={(e) => goto(`/setlists/${s.id}`, e)}
-            class="outline-none"
+            class="focus-ring block rounded-t-xl"
           >
             <CardContent class="flex flex-col gap-2 px-4 py-4">
               <div class="flex items-start justify-between gap-2">
@@ -138,7 +138,7 @@
                 </span>
               </div>
               <div>
-                <h3 class="font-heading text-base font-semibold leading-tight group-hover/sl:text-primary">
+                <h3 class="text-base font-semibold leading-tight group-hover/sl:text-primary">
                   {s.title}
                 </h3>
                 {#if s.description}

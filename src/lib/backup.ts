@@ -1,4 +1,5 @@
 import { listNotes, getNote, upsertNote } from "@/lib/db";
+import { getDb } from "@/lib/db-driver";
 import {
   listSetlists,
   listAllSetlistItems,
@@ -39,6 +40,64 @@ function isLibraryBackup(value: unknown): value is LibraryBackup {
     Array.isArray(v.setlists) &&
     Array.isArray(v.setlistItems)
   );
+}
+
+/**
+ * Coerces one note from a backup file into a shape the DB layer can bind.
+ * Files written by older versions predate `tuning` and `updatedAt`, and a
+ * hand-edited file can carry a null where an array belongs — previously
+ * either produced a raw SQLite error partway through the import.
+ */
+function normalizeNote(value: unknown, index: number): Note {
+  if (!value || typeof value !== "object") {
+    throw new Error(`Note ${index + 1} in this file isn't valid.`);
+  }
+  const n = value as Record<string, unknown>;
+  if (typeof n.id !== "string" || !n.id) {
+    throw new Error(`Note ${index + 1} in this file is missing an id.`);
+  }
+  if (typeof n.title !== "string") {
+    throw new Error(`Note ${index + 1} in this file is missing a title.`);
+  }
+
+  const str = (v: unknown, fallback: string) =>
+    typeof v === "string" ? v : fallback;
+  const strArray = (v: unknown) =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+
+  const createdAt = str(n.createdAt, new Date().toISOString());
+
+  return {
+    id: n.id,
+    // Slug is UNIQUE NOT NULL; a file missing one would abort the insert.
+    slug: str(n.slug, "") || `${n.id}`,
+    type: n.type === "tab" ? "tab" : "chords",
+    title: n.title,
+    artist: str(n.artist, ""),
+    key: str(n.key, "C"),
+    capo: typeof n.capo === "number" && Number.isFinite(n.capo) ? n.capo : 0,
+    difficulty:
+      n.difficulty === "intermediate" || n.difficulty === "advanced"
+        ? n.difficulty
+        : "beginner",
+    tags: strArray(n.tags),
+    createdAt,
+    updatedAt: str(n.updatedAt, createdAt),
+    tuning: str(n.tuning, "standard"),
+    chordSheet: typeof n.chordSheet === "string" ? n.chordSheet : undefined,
+    tabBlocks: Array.isArray(n.tabBlocks)
+      ? (n.tabBlocks as Note["tabBlocks"])
+      : undefined,
+    chords: strArray(n.chords),
+    strummingPattern: Array.isArray(n.strummingPattern)
+      ? strArray(n.strummingPattern)
+      : undefined,
+    bpm:
+      typeof n.bpm === "number" && Number.isFinite(n.bpm) && n.bpm > 0
+        ? n.bpm
+        : undefined,
+    isFavorite: !!n.isFavorite,
+  };
 }
 
 function isNoteBackup(value: unknown): value is NoteBackup {
@@ -177,12 +236,26 @@ export async function importLibrary(): Promise<{ notes: number; setlists: number
     throw new Error("This file isn't a valid Fretnote library backup.");
   }
 
-  // Notes and setlists first, since setlist items reference them by id.
-  for (const note of data.notes) await upsertNote(note);
-  for (const setlist of data.setlists) await upsertSetlist(setlist);
-  for (const item of data.setlistItems) await upsertSetlistItem(item);
+  // Validate the whole file before writing a single row. Previously each
+  // note was bound straight to SQLite, so a bad entry halfway down threw a
+  // raw driver error with the earlier rows already committed and no way to
+  // tell what had been applied.
+  const notes = data.notes.map(normalizeNote);
 
-  return { notes: data.notes.length, setlists: data.setlists.length };
+  const db = await getDb();
+  await db.execute("BEGIN");
+  try {
+    // Notes and setlists first, since setlist items reference them by id.
+    for (const note of notes) await upsertNote(note);
+    for (const setlist of data.setlists) await upsertSetlist(setlist);
+    for (const item of data.setlistItems) await upsertSetlistItem(item);
+    await db.execute("COMMIT");
+  } catch (err) {
+    await db.execute("ROLLBACK").catch(() => {});
+    throw err;
+  }
+
+  return { notes: notes.length, setlists: data.setlists.length };
 }
 
 /**
@@ -237,7 +310,8 @@ export async function importNote(): Promise<Note | null> {
     throw new Error("This file isn't a valid Fretnote note.");
   }
 
-  const existing = await getNote(data.note.id);
+  const note = normalizeNote(data.note, 0);
+  const existing = await getNote(note.id);
   if (existing) {
     const overwrite = confirm(
       `A note named "${existing.title}" already exists. Overwrite it with the imported version?`
@@ -245,6 +319,6 @@ export async function importNote(): Promise<Note | null> {
     if (!overwrite) return null;
   }
 
-  await upsertNote(data.note);
-  return data.note;
+  await upsertNote(note);
+  return note;
 }

@@ -49,6 +49,14 @@ export interface Note {
   difficulty: Difficulty;
   tags: string[];
   createdAt: string; // ISO date
+  /** ISO date of the last save. Falls back to `createdAt` for older rows. */
+  updatedAt?: string;
+  /**
+   * Id of the `Tuning` the note was written in, e.g. "standard" or "drop-d".
+   * Drives the string labels on tabs and the fretboard maths, so it has to
+   * travel with the note rather than following the app-wide default.
+   */
+  tuning: string;
   /**
    * Chord-over-lyrics body using inline bracket notation, e.g.
    * "[Am]Today is [C]gonna be the [D]day". Present for type === "chords".
@@ -68,6 +76,13 @@ export interface Note {
   /** Whether the note is starred by the user. */
   isFavorite?: boolean;
 }
+
+/**
+ * What a feed or search result actually draws: title, artist, key, capo, a
+ * few chord chips and tags. Deliberately excludes `chordSheet` and
+ * `tabBlocks`, which are the bulk of a row and are never read by a card.
+ */
+export type NoteSummary = Omit<Note, "chordSheet" | "tabBlocks">;
 
 /** The 6 open guitar strings, low-E (6th) to high-e (1st). */
 export const STRING_NAMES = ["E", "A", "D", "G", "B", "e"] as const;

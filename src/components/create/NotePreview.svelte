@@ -110,7 +110,7 @@
     <div class="space-y-6 p-5">
       <!-- Title & metadata -->
       <header>
-        <h2 class="font-heading text-2xl font-semibold tracking-tight">
+        <h2 class="text-2xl font-semibold tracking-tight">
           {#if title}
             {title}
           {:else}

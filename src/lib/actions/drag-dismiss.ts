@@ -71,6 +71,10 @@ export function dragDismiss(node: HTMLElement, options: DragDismissOptions) {
     node.style.transform = `translateY(${dy}px)`;
   }
 
+  /** Tracked so teardown can cancel it — otherwise the dismiss callback
+   *  fires after the component is gone. */
+  let dismissTimer: ReturnType<typeof setTimeout> | null = null;
+
   function onTouchEnd() {
     if (!dragging) return;
     dragging = false;
@@ -78,7 +82,8 @@ export function dragDismiss(node: HTMLElement, options: DragDismissOptions) {
     if (dy > threshold || velocity > 0.5) {
       node.style.transition = "transform 160ms ease-in";
       node.style.transform = "translateY(100%)";
-      setTimeout(() => {
+      dismissTimer = setTimeout(() => {
+        dismissTimer = null;
         reset();
         opts.onDismiss();
       }, 160);
@@ -104,6 +109,7 @@ export function dragDismiss(node: HTMLElement, options: DragDismissOptions) {
       node.removeEventListener("touchmove", onTouchMove);
       node.removeEventListener("touchend", onTouchEnd);
       node.removeEventListener("touchcancel", onTouchEnd);
+      if (dismissTimer !== null) clearTimeout(dismissTimer);
       reset();
     },
   };
