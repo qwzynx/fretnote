@@ -8,6 +8,11 @@ export default defineConfig({
   server: {
     port: 1420,
     strictPort: true,
+    watch: {
+      // Cargo's build output is handled by the Rust toolchain, not Vite. On
+      // Windows, watching it crashes Vite with EBUSY on locked build-script .exe files.
+      ignored: ["**/src-tauri/**", "**/target/**"],
+    },
   },
   envPrefix: ["VITE_", "TAURI_ENV_*"],
   build: {
