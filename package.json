@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "pretauri": "node scripts/ensure-native-deps.mjs",
     "tauri": "tauri",
+    "predev": "node scripts/ensure-native-deps.mjs",
     "dev": "cross-env GDK_BACKEND=x11 WEBKIT_DISABLE_DMABUF_RENDERER=1 tauri dev",
+    "prebuild": "node scripts/ensure-native-deps.mjs",
     "build": "tauri build",
     "vite:dev": "vite",
     "vite:dev:web": "vite --port 1421",
